@@ -11,7 +11,7 @@ GitHub Pages를 통해 배포된 인터랙티브 대시보드 목록입니다.
 
 > 2025년 2분기 기준 한국 주식시장 분석 및 투자 추천 종목 시각화
 
-**👉 [https://psr8989.github.io/Github/](https://psr8989.github.io/Github/)**
+**👉 [https://psr8989.github.io/Github/stock-dashboard/](https://psr8989.github.io/Github/stock-dashboard/)**
 
 | 항목 | 내용 |
 |------|------|
@@ -66,7 +66,8 @@ GitHub Pages를 통해 배포된 인터랙티브 대시보드 목록입니다.
 
 ```
 Github/
-├── index.html                  ← 한국 주식시장 대시보드
+├── stock-dashboard/
+│   └── index.html              ← 한국 주식시장 대시보드
 ├── insurance-dashboard/
 │   └── index.html              ← 보험료 예측 머신러닝 대시보드
 └── README.md                   ← 이 파일 (대시보드 안내)
