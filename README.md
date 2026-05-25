@@ -62,6 +62,27 @@ GitHub Pages를 통해 배포된 인터랙티브 대시보드 목록입니다.
 
 ---
 
+### 3. 📊 캠페인 반응 예측 머신러닝 대시보드
+
+> `머신러닝_과제.ipynb` 실행 결과 기반 — 마케팅 캠페인 수락 여부 이진 분류
+
+**👉 [https://psr8989.github.io/Github/campaign-dashboard/](https://psr8989.github.io/Github/campaign-dashboard/)**
+
+| 항목 | 내용 |
+|------|------|
+| **데이터** | 훈련 1,344건 / 테스트 896건 / 원본 특성 27개 |
+| **문제 유형** | 이진 분류 (캠페인 수락 여부 0/1) |
+| **평가 지표** | ROC-AUC |
+| **교차검증** | RepeatedStratifiedKFold (5-Fold × 3 Repeat = 15폴드) |
+| **하이퍼파라미터** | Optuna TPE 30 Trials 자동 탐색 |
+| **모델** | LGBM / XGBoost / CatBoost / 앙상블 블렌딩 |
+
+**노트북 실제 결과:**
+- LGBM 기본 OOF AUC: **0.90649** → Optuna 튜닝 후: **0.90951**
+- 앙상블 최종 OOF AUC: **0.91250** (최고 성능)
+
+---
+
 ## 📁 폴더 구조
 
 ```
@@ -69,7 +90,9 @@ Github/
 ├── stock-dashboard/
 │   └── index.html              ← 한국 주식시장 대시보드
 ├── insurance-dashboard/
-│   └── index.html              ← 보험료 예측 머신러닝 대시보드
+│   └── index.html              ← 보험료 데이터 탐색 분석 대시보드
+├── campaign-dashboard/
+│   └── index.html              ← 캠페인 반응 예측 ML 대시보드 (노트북 기반)
 └── README.md                   ← 이 파일 (대시보드 안내)
 ```
 
