@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>3D 계산기</title>
+<style>
+  :root {
+    --bg1: #1b2335;
+    --bg2: #0d1119;
+    --case-top: #2c3650;
+    --case-bot: #1a2133;
+    --display-bg: #0b1622;
+    --accent: #ff8c42;
+    --accent-d: #d96f2a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    font-family: "Segoe UI", "Malgun Gothic", system-ui, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 30% 20%, var(--bg1), var(--bg2) 70%);
+    overflow: hidden;
+  }
+
+  /* ---- perspective wrapper so the whole unit tilts in 3D ---- */
+  .stage {
+    perspective: 1400px;
+  }
+
+  .calc {
+    width: 440px;
+    padding: 32px 28px 36px;
+    border-radius: 34px;
+    background: linear-gradient(160deg, var(--case-top), var(--case-bot));
+    transform-style: preserve-3d;
+    box-shadow:
+      0 2px 0 #3a466688 inset,
+      0 30px 50px rgba(0,0,0,.55),
+      0 0 60px rgba(80,110,200,.10),
+      0 60px 80px -30px rgba(0,0,0,.7);
+  }
+
+  /* ---- display ---- */
+  .display {
+    position: relative;
+    border-radius: 18px;
+    padding: 24px 24px 20px;
+    margin-bottom: 28px;
+    background: linear-gradient(180deg, #07101a, var(--display-bg));
+    box-shadow:
+      0 3px 8px rgba(0,0,0,.6) inset,
+      0 -1px 0 #2b3550 inset,
+      0 1px 0 #3c4a66;
+    overflow: hidden;
+    text-align: right;
+  }
+  .display::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(115deg, rgba(255,255,255,.06), transparent 40%);
+    pointer-events: none;
+  }
+  .history {
+    min-height: 24px;
+    font-size: 18px;
+    color: #66809e;
+    letter-spacing: .5px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .result {
+    font-size: 56px;
+    font-weight: 600;
+    color: #eaf2ff;
+    line-height: 1.1;
+    text-shadow: 0 0 12px rgba(120,180,255,.25);
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  /* ---- keypad ---- */
+  .keys {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    transform-style: preserve-3d;
+  }
+
+  button.key {
+    position: relative;
+    border: none;
+    cursor: pointer;
+    height: 76px;
+    border-radius: 20px;
+    font-size: 28px;
+    font-weight: 600;
+    color: #e7eefc;
+    background: linear-gradient(180deg, #3b4767, #28324b);
+    transform: translateZ(14px);
+    transition: transform .08s ease, box-shadow .08s ease, filter .15s;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.18) inset,
+      0 -3px 6px rgba(0,0,0,.35) inset,
+      0 10px 0 #1c2336,
+      0 14px 18px rgba(0,0,0,.45);
+  }
+  button.key:hover { filter: brightness(1.12); }
+  button.key:active,
+  button.key.pressed {
+    transform: translateZ(4px) translateY(7px);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.12) inset,
+      0 -2px 5px rgba(0,0,0,.4) inset,
+      0 3px 0 #1c2336,
+      0 5px 8px rgba(0,0,0,.4);
+  }
+
+  .key.op {
+    background: linear-gradient(180deg, #46557d, #313e5c);
+    color: #cfe0ff;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.2) inset,
+      0 -3px 6px rgba(0,0,0,.35) inset,
+      0 10px 0 #232c44,
+      0 14px 18px rgba(0,0,0,.45);
+  }
+  .key.fn {
+    background: linear-gradient(180deg, #2f3a57, #222b41);
+    color: #9fb4d6;
+    font-size: 24px;
+  }
+  .key.equals {
+    background: linear-gradient(180deg, var(--accent), var(--accent-d));
+    color: #fff;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.35) inset,
+      0 -3px 6px rgba(0,0,0,.3) inset,
+      0 10px 0 #9c4f1e,
+      0 14px 20px rgba(255,120,40,.35);
+  }
+  .key.equals:active,
+  .key.equals.pressed {
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.25) inset,
+      0 3px 0 #9c4f1e,
+      0 5px 10px rgba(255,120,40,.3);
+  }
+  .key.zero { grid-column: span 2; }
+
+  .brand {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 12px;
+    letter-spacing: 4px;
+    color: #51648a;
+    text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="calc">
+      <div class="display">
+        <div class="history" id="history">&nbsp;</div>
+        <div class="result" id="result">0</div>
+      </div>
+
+      <div class="keys" id="keys">
+        <button class="key fn" data-action="clear">AC</button>
+        <button class="key fn" data-action="sign">±</button>
+        <button class="key fn" data-action="percent">%</button>
+        <button class="key op" data-op="/">÷</button>
+
+        <button class="key" data-num="7">7</button>
+        <button class="key" data-num="8">8</button>
+        <button class="key" data-num="9">9</button>
+        <button class="key op" data-op="*">×</button>
+
+        <button class="key" data-num="4">4</button>
+        <button class="key" data-num="5">5</button>
+        <button class="key" data-num="6">6</button>
+        <button class="key op" data-op="-">−</button>
+
+        <button class="key" data-num="1">1</button>
+        <button class="key" data-num="2">2</button>
+        <button class="key" data-num="3">3</button>
+        <button class="key op" data-op="+">+</button>
+
+        <button class="key zero" data-num="0">0</button>
+        <button class="key" data-num=".">.</button>
+        <button class="key equals" data-action="equals">=</button>
+      </div>
+
+      <div class="brand">3D&nbsp;Calc</div>
+    </div>
+  </div>
+
+<script>
+  const resultEl  = document.getElementById('result');
+  const historyEl = document.getElementById('history');
+
+  let current  = '0';   // 현재 입력 중인 숫자
+  let previous = null;  // 누적 피연산자
+  let operator = null;  // 대기 중인 연산자
+  let justEvaluated = false;
+
+  const opSymbol = { '+': '+', '-': '−', '*': '×', '/': '÷' };
+
+  function format(numStr) {
+    if (numStr === '' || numStr === '-') return numStr || '0';
+    if (numStr.endsWith('.')) {
+      const intPart = numStr.slice(0, -1);
+      return addCommas(intPart) + '.';
+    }
+    const neg = numStr.startsWith('-');
+    const abs = neg ? numStr.slice(1) : numStr;
+    const [int, dec] = abs.split('.');
+    let out = addCommas(int);
+    if (dec !== undefined) out += '.' + dec;
+    return (neg ? '-' : '') + out;
+  }
+  function addCommas(int) {
+    return int.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  function updateDisplay() {
+    resultEl.textContent = format(current);
+    if (operator && previous !== null) {
+      historyEl.textContent = format(previous) + ' ' + opSymbol[operator];
+    } else {
+      historyEl.innerHTML = '&nbsp;';
+    }
+  }
+
+  function inputNum(d) {
+    if (justEvaluated) { current = '0'; justEvaluated = false; }
+    if (d === '.') {
+      if (!current.includes('.')) current += '.';
+    } else if (current === '0') {
+      current = d;
+    } else {
+      if (current.replace(/[-.]/g, '').length >= 12) return; // 자릿수 제한
+      current += d;
+    }
+    updateDisplay();
+  }
+
+  function chooseOp(op) {
+    if (operator && previous !== null && !justEvaluated) {
+      compute();
+    } else {
+      previous = current;
+    }
+    operator = op;
+    justEvaluated = false;
+    current = '0';
+    historyEl.textContent = format(previous) + ' ' + opSymbol[operator];
+  }
+
+  function compute() {
+    if (operator === null || previous === null) return;
+    const a = parseFloat(previous);
+    const b = parseFloat(current);
+    let r = 0;
+    switch (operator) {
+      case '+': r = a + b; break;
+      case '-': r = a - b; break;
+      case '*': r = a * b; break;
+      case '/': r = b === 0 ? NaN : a / b; break;
+    }
+    if (!isFinite(r) || isNaN(r)) {
+      current = 'Error';
+      resultEl.textContent = '오류';
+      previous = null; operator = null; justEvaluated = true;
+      historyEl.innerHTML = '&nbsp;';
+      current = '0';
+      return;
+    }
+    // 부동소수점 정리
+    r = Math.round((r + Number.EPSILON) * 1e10) / 1e10;
+    current = String(r);
+    previous = null;
+    operator = null;
+    justEvaluated = true;
+  }
+
+  function equals() {
+    if (operator === null || previous === null) return;
+    const exp = format(previous) + ' ' + opSymbol[operator] + ' ' + format(current);
+    compute();
+    historyEl.textContent = exp + ' =';
+    resultEl.textContent = format(current);
+  }
+
+  function clearAll() {
+    current = '0'; previous = null; operator = null; justEvaluated = false;
+    updateDisplay();
+  }
+
+  function toggleSign() {
+    if (current === '0' || current === 'Error') return;
+    current = current.startsWith('-') ? current.slice(1) : '-' + current;
+    updateDisplay();
+  }
+
+  function percent() {
+    current = String(parseFloat(current) / 100);
+    justEvaluated = true;
+    updateDisplay();
+  }
+
+  // ---- 클릭 처리 ----
+  document.getElementById('keys').addEventListener('click', (e) => {
+    const btn = e.target.closest('button.key');
+    if (!btn) return;
+    handle(btn);
+  });
+
+  function handle(btn) {
+    if (btn.dataset.num !== undefined) inputNum(btn.dataset.num);
+    else if (btn.dataset.op !== undefined) chooseOp(btn.dataset.op);
+    else switch (btn.dataset.action) {
+      case 'clear':   clearAll();  break;
+      case 'sign':    toggleSign(); break;
+      case 'percent': percent();   break;
+      case 'equals':  equals();    break;
+    }
+  }
+
+  // ---- 키보드 지원 ----
+  const keyMap = {
+    '/': '[data-op="/"]', '*': '[data-op="*"]',
+    '-': '[data-op="-"]', '+': '[data-op="+"]',
+    'Enter': '[data-action="equals"]', '=': '[data-action="equals"]',
+    'Escape': '[data-action="clear"]', '%': '[data-action="percent"]',
+    '.': '[data-num="."]'
+  };
+  for (let i = 0; i <= 9; i++) keyMap[i] = `[data-num="${i}"]`;
+
+  window.addEventListener('keydown', (e) => {
+    const sel = keyMap[e.key];
+    if (e.key === 'Backspace') { backspace(); return; }
+    if (!sel) return;
+    e.preventDefault();
+    const btn = document.querySelector(sel);
+    if (!btn) return;
+    handle(btn);
+    btn.classList.add('pressed');
+    setTimeout(() => btn.classList.remove('pressed'), 100);
+  });
+
+  function backspace() {
+    if (justEvaluated) return;
+    if (current.length <= 1 || (current.length === 2 && current.startsWith('-'))) {
+      current = '0';
+    } else {
+      current = current.slice(0, -1);
+    }
+    updateDisplay();
+  }
+
+  updateDisplay();
+</script>
+</body>
+</html>
