@@ -78,8 +78,9 @@ h4.bk{font-weight:700;font-size:17.5px;color:var(--gold-soft);margin:26px 0 8px;
 
 .reader p{margin:0 0 18px;color:var(--ink);}
 .reader p.spacer{margin:0;height:8px;}
-/* bold: heavier + brighter, but an inner colour span still wins */
-.reader strong{font-weight:700;color:#f6f1e6;}
+/* bold: gold accent so it clearly stands out on the dark theme,
+   but an inner colour span (red/blue) still wins */
+.reader strong{font-weight:700;color:var(--gold-soft);}
 /* italics flattened per request — keep semantics, drop the slant/colour shift */
 .reader em{font-style:normal;color:inherit;font-weight:inherit;}
 .reader code{background:#241f2e;color:#e6b9a0;padding:.12em .42em;border-radius:5px;font-size:.9em;font-family:ui-monospace,monospace;}
@@ -99,8 +100,20 @@ blockquote{margin:26px 0;padding:18px 26px;border-left:3px solid var(--gold);
   font-family:"Noto Serif KR",serif;font-size:18.5px;font-style:italic;color:var(--ink-soft);
   border-radius:0 8px 8px 0;line-height:1.8;}
 figure{margin:30px 0;text-align:center;}
-figure img{max-width:100%;height:auto;border-radius:10px;border:1px solid var(--line);box-shadow:0 8px 30px rgba(0,0,0,.4);background:#fff;}
+figure img{max-width:100%;height:auto;border-radius:10px;border:1px solid var(--line);box-shadow:0 8px 30px rgba(0,0,0,.4);background:#fff;cursor:zoom-in;transition:transform .2s,box-shadow .2s;}
+figure img:hover{transform:translateY(-2px);box-shadow:0 12px 38px rgba(0,0,0,.55);}
 figcaption{margin-top:10px;color:var(--ink-faint);font-size:13.5px;}
+
+/* lightbox */
+#lightbox{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;
+  background:rgba(8,7,11,.92);backdrop-filter:blur(3px);cursor:zoom-out;padding:40px;}
+#lightbox.open{display:flex;animation:lbfade .2s ease;}
+#lightbox img{max-width:96vw;max-height:92vh;border-radius:8px;background:#fff;
+  box-shadow:0 20px 70px rgba(0,0,0,.7);}
+#lbClose{position:fixed;top:18px;right:22px;width:46px;height:46px;border-radius:50%;
+  background:var(--panel);color:var(--gold-soft);border:1px solid var(--line);font-size:22px;cursor:pointer;z-index:81;}
+#lbClose:hover{background:var(--gold);color:#1a1620;}
+@keyframes lbfade{from{opacity:0}to{opacity:1}}
 hr{border:none;border-top:1px solid var(--line);margin:34px 0;}
 
 .c-gray{color:#9a948a;} .c-brown{color:#bd9a86;} .c-orange{color:#e0995a;}
@@ -200,6 +213,7 @@ hr{border:none;border-top:1px solid var(--line);margin:34px 0;}
   </footer>
 </main>
 <button id="toTop" aria-label="맨 위로">↑</button>
+<div id="lightbox"><button id="lbClose" aria-label="닫기">✕</button><img alt=""></div>
 <script>
 (function(){
   var sidebar=document.getElementById('sidebar');
@@ -234,6 +248,17 @@ hr{border:none;border-top:1px solid var(--line);margin:34px 0;}
     if(window.scrollY>600)toTop.classList.add('show');else toTop.classList.remove('show');
   });
   toTop.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+
+  // image lightbox
+  var lb=document.getElementById('lightbox');
+  var lbImg=lb.querySelector('img');
+  function openLb(src){lbImg.src=src;lb.classList.add('open');document.body.style.overflow='hidden';}
+  function closeLb(){lb.classList.remove('open');document.body.style.overflow='';lbImg.src='';}
+  [].slice.call(document.querySelectorAll('.reader figure img')).forEach(function(img){
+    img.addEventListener('click',function(){openLb(img.currentSrc||img.src);});
+  });
+  lb.addEventListener('click',closeLb);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&lb.classList.contains('open'))closeLb();});
 })();
 
 </script>
