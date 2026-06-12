@@ -84,17 +84,18 @@ main{margin-left:var(--sb-w);}
   box-shadow:0 6px 22px rgba(0,0,0,.4);background:linear-gradient(180deg,#1d1926,#161320);}
 .toc-ico{font-size:18px;opacity:.8;}
 
-/* prev / next navigation */
-.page-nav{display:flex;gap:14px;margin:56px 0 8px;padding-top:30px;border-top:1px solid var(--line);}
-.pn{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:5px;padding:16px 18px;border:1px solid var(--line);
-  border-radius:11px;background:#15121b;transition:.18s;}
+/* prev / next navigation (supports branching: several destinations) */
+.page-nav{display:flex;gap:14px;margin:56px 0 8px;padding-top:30px;border-top:1px solid var(--line);align-items:flex-start;}
+.pn-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:8px;}
+.pn-col.pn-empty{visibility:hidden;}
+.pn-next{align-items:flex-end;text-align:right;}
+.pn-label{font-family:"Cinzel",serif;font-size:11.5px;letter-spacing:.14em;color:var(--gold);}
+.pn-branch{font-family:"Noto Sans KR",sans-serif;letter-spacing:0;font-size:11px;color:var(--ink-faint);}
+.pn{display:block;width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:11px;
+  background:#15121b;transition:.18s;}
 .pn:hover{border-color:var(--gold);background:#1b1724;}
-.pn-next{text-align:right;align-items:flex-end;}
-.pn span{font-family:"Cinzel",serif;font-size:11.5px;letter-spacing:.14em;color:var(--gold);}
-.pn b{color:var(--ink);font-weight:600;font-size:15px;line-height:1.4;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
+.pn b{display:block;color:var(--ink);font-weight:600;font-size:15px;line-height:1.4;}
 .pn:hover b{color:#fff;}
-.pn-empty{flex:1 1 0;border:none;background:none;}
 
 h2.bk{font-family:"Noto Serif KR",serif;font-weight:600;font-size:26px;color:var(--gold-soft);margin:46px 0 16px;line-height:1.35;}
 h3.bk{font-family:"Noto Serif KR",serif;font-weight:600;font-size:21px;color:#fff;margin:34px 0 12px;line-height:1.4;}
@@ -249,7 +250,7 @@ hr{border:none;border-top:1px solid var(--line);margin:34px 0;}
 <header class="page-head"><div class="ph-inner"><a class="ph-home" href="index.html">← 목차</a><span class="ph-kicker">막간 I</span><h1 class="ph-title">아미티지의 운명</h1></div></header>
   <div class="reader">
 <p class="spacer"></p><ul><li>캠페인 기록지를 확인합니다.<ul><li><strong><em>조사자들이 몇 시간 동안 의식을 잃었다</em></strong>면, <strong>아미티지의 운명 1</strong>로 이어집니다.</li><li>그 외의 경우, <strong>아미티지의 운명 2</strong>로 건너뜁니다.</li></ul></li></ul><p class="spacer"></p><p><strong>아미티지의 운명 1:</strong><em> 미스캐토닉 대학과 클로버 클럽에서 겪은 일로 인해 당신은 잔뜩 겁에 질립니다. 누가, 혹은 대체 무엇이 라이스 교수와 모건 박사를 쫓고 있는지는 분명치 않습니다. 혹여 아미티지 박사까지 노리는 자가 있는 것이 아닐까 걱정된 당신은 급히 아미티지 박사의 집으로 돌아갔습니다. 아니나 다를까 도착해보니, 앞문 걸쇠는 부서져 열려 있고 거실과 서재는 누군가 마구 뒤진 듯 난장판이었습니다. 아미티지 박사의 모습은 보이지 않습니다. 집을 수색하던 중, 아미티지 박사의 책상 제일 아래 서랍에서 일지 한 권을 발견했습니다. 다른 서류 더미에 가려있었던 탓에 침입자가 훔쳐가지 않은 듯합니다. 일지는 살면서 한 번도 본 적 없는 기이한 문자로 쓰여 있었습니다. 다행히도, 아미티지 박사는 일지에 해석을 달아두었습니다. 이 일지는 “윌버 웨이틀리”의 물건이었습니다.</em></p><p><em>윌버 웨이틀리의 일지에는 아미티지가 달아 둔 많은 주석과 함께, 놀라운 이야기가 적혀 있었습니다. 간밤의 끔찍한 경험이 아니었더라면, 당신은 아마 일지의 내용을 믿지 못했을 겁니다…</em></p><ul><li>캠페인 기록지에 <strong><em>헨리 아미티지 박사가 납치되었다</em></strong>라고 기록합니다.</li><li>윌버 웨이틀리의 일지를 읽고 숨겨진 신화의 세계에 대해 알게 되었습니다. 각 조사자는 경험치를 추가로 2씩 얻습니다.</li><li><a href="47ac5740bac54d3aa9406e94040ea43f.html"><strong>시나리오 II: “미스캐토닉 박물관”</strong></a>으로 이어집니다.</li></ul><p><br><strong>아미티지의 운명 2:</strong><em> 아컴 남부에 있는 아미티지 박사의 집으로 되돌아왔습니다. 아미티지 박사는 걱정으로 땀에 젖은 채 창백한 낯빛을 하고 책상에 앉아 있었습니다. 동료를 찾아봐 줘서 고맙다고 말하면서도, 아미티지 박사는 그리 안심한 듯 보이지 않습니다. 긴 침묵 끝에, 그는 안경을 고쳐 쓰고는 당신에게 말합니다.</em></p><p><em>“미안하게 되었네. 내가 미처 털어놓지 못한 게 있었네.” 아미티지 박사가 당신에게, 간밤의 끔찍한 경험이 아니었더라면 도저히 믿지 못했을 이야기를 들려주기 시작합니다…</em></p><ul><li>캠페인 기록지에 <strong><em>조사자들이 헨리 아미티지 박사를 구출했다</em></strong>라고 기록합니다. 캠페인 안내서의 “동행” 항목에 ‘헨리 아미티지 박사’를 기록합니다.</li><li><a href="47ac5740bac54d3aa9406e94040ea43f.html"><strong>시나리오 II: “미스캐토닉 박물관”</strong></a>으로 이어집니다.</li></ul>
-<nav class="page-nav"><a class="pn pn-prev" href="91f0564e77914a00be5a72991ea13ac3.html"><span>← 이전</span><b>시나리오 I-B: 도박장은 언제나 이긴다</b></a><a class="pn pn-next" href="47ac5740bac54d3aa9406e94040ea43f.html"><span>다음 →</span><b>시나리오 II: 미스캐토닉 박물관</b></a></nav>
+<nav class="page-nav"><div class="pn-col pn-prev"><span class="pn-label">← 이전 <span class="pn-branch">(결과에 따라)</span></span><a class="pn" href="d6f969ca76aa4816bd43a5b087f5bd73.html"><b>시나리오 I-A: 과외 활동</b></a><a class="pn" href="91f0564e77914a00be5a72991ea13ac3.html"><b>시나리오 I-B: 도박장은 언제나 이긴다</b></a></div><div class="pn-col pn-next"><span class="pn-label">다음 →</span><a class="pn" href="47ac5740bac54d3aa9406e94040ea43f.html"><b>시나리오 II: 미스캐토닉 박물관</b></a></div></nav>
   </div>
   <footer class="site-foot">
     <p>본 안내서는 던위치의 유산(도전 모드) 캠페인의 팬 제작 자료를 읽기 좋게 재구성한 것입니다.</p>

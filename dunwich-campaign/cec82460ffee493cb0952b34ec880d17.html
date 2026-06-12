@@ -84,17 +84,18 @@ main{margin-left:var(--sb-w);}
   box-shadow:0 6px 22px rgba(0,0,0,.4);background:linear-gradient(180deg,#1d1926,#161320);}
 .toc-ico{font-size:18px;opacity:.8;}
 
-/* prev / next navigation */
-.page-nav{display:flex;gap:14px;margin:56px 0 8px;padding-top:30px;border-top:1px solid var(--line);}
-.pn{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:5px;padding:16px 18px;border:1px solid var(--line);
-  border-radius:11px;background:#15121b;transition:.18s;}
+/* prev / next navigation (supports branching: several destinations) */
+.page-nav{display:flex;gap:14px;margin:56px 0 8px;padding-top:30px;border-top:1px solid var(--line);align-items:flex-start;}
+.pn-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:8px;}
+.pn-col.pn-empty{visibility:hidden;}
+.pn-next{align-items:flex-end;text-align:right;}
+.pn-label{font-family:"Cinzel",serif;font-size:11.5px;letter-spacing:.14em;color:var(--gold);}
+.pn-branch{font-family:"Noto Sans KR",sans-serif;letter-spacing:0;font-size:11px;color:var(--ink-faint);}
+.pn{display:block;width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:11px;
+  background:#15121b;transition:.18s;}
 .pn:hover{border-color:var(--gold);background:#1b1724;}
-.pn-next{text-align:right;align-items:flex-end;}
-.pn span{font-family:"Cinzel",serif;font-size:11.5px;letter-spacing:.14em;color:var(--gold);}
-.pn b{color:var(--ink);font-weight:600;font-size:15px;line-height:1.4;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
+.pn b{display:block;color:var(--ink);font-weight:600;font-size:15px;line-height:1.4;}
 .pn:hover b{color:#fff;}
-.pn-empty{flex:1 1 0;border:none;background:none;}
 
 h2.bk{font-family:"Noto Serif KR",serif;font-weight:600;font-size:26px;color:var(--gold-soft);margin:46px 0 16px;line-height:1.35;}
 h3.bk{font-family:"Noto Serif KR",serif;font-weight:600;font-size:21px;color:#fff;margin:34px 0 12px;line-height:1.4;}
@@ -249,7 +250,7 @@ hr{border:none;border-top:1px solid var(--line);margin:34px 0;}
 <header class="page-head"><div class="ph-inner"><a class="ph-home" href="index.html">← 목차</a><span class="ph-kicker">✦ ✦ ✦</span><h1 class="ph-title">업적 목록</h1></div></header>
   <div class="reader">
 <p>다음은 조사자들이 <strong><em>던위치의 유산(도전 모드)</em></strong> 캠페인에서 노려볼 만한 업적 목록입니다. 이러한 업적을 달성할 때마다 각 항목 옆의 네모 칸에 체크 표시를 합니다. 여러분의 궁극적인 목표는 모든 업적을 달성하는 겁니다!</p><ul><li>□ 미스캐토닉 릴레이: “과외 활동”에서 모든 <strong><em>미스캐토닉</em></strong> 장소를 공개하십시오.</li><li>□ 도박장에는 술이 빠질 수 없지: “도박장은 언제나 이긴다”에서 모든 조사자가 술을 마신 후 전원 후퇴하는 데 성공하십시오.</li><li>□ 박물관 붕괴 사건: “미스캐토닉 박물관”에서 ‘어둠의 피조물’에 자원을 10개 놓으십시오.</li><li>□ 저 친구도 차원문에 좀 끌려갔으면: “에식스 카운티 특급열차”에서 ‘휘도는 차원문’이 위치한 장소에서 ‘차장’을 쓰러뜨리십시오.</li><li>□ 어디서 처형을: “제단에 흘린 피”에서 ‘나이트건트 처형자’ 셋 모두가 ‘마을 광장’에서 소진된 상황을 만드십시오.</li><li>□ 디펜스:  “제단에 흘린 피”에서 ‘에이미 박’과 ‘워렌 라이스 교수’를 모두 요그 소토스에게 희생시킨 후 주요목적을 완수해 시나리오를 마치십시오.</li><li>□ 길이 여기가 아닌 것 같은데: “파멸이 기다리는 곳”에서 ‘언덕 아랫자락’의 [자유 격발] 기능을 6번 이상 격발하십시오.</li><li>□ 장막을 들춰 보았지만 그 뒤에는 약점만이…: 덱과 버린 카드 더미에 오직 약점만 남은 상태로 주요목적을 완수해 시나리오를 마치십시오.</li><li>□ 미스캐토닉 대학은 세계에서 가장 우수한 대학이고…: 한 게임 동안 ‘헨리 아미티지 박사’의 효과로 <strong><em>미스캐토닉</em></strong> 조력자 카드 3장을 조사자의 손으로 가져가게 하십시오.</li><li>□ 이런 고요함은 익숙한걸: ‘소름끼치는 고요’의 테스트 난이도를 0까지 낮추십시오.</li><li>□ 진정한 사이클링의 미학: ‘부정한 마을’의 효과로 덱 전체를 버리십시오.</li><li>□ 무슨 일이 일어난 거지: ‘변화무쌍한 구체의 집괴’ 우두머리 하나의 아래에 무리 카드가 5개 이상 되도록 만드십시오.</li><li>□ 토큰을 준다면야 뭔들: [석판]과 [옛것]이 각각 3개 이상인 상태로 캠페인에서 승리하십시오.</li><li>완벽한 던위치 도전자: 다음 각 시나리오에서 <em>(시나리오 자체에서 제공하는)</em> 최대 경험치를 획득하십시오. <ul><li>□ 과외 활동(9점)</li><li>□ 도박장은 언제나 이긴다(6점)</li><li>□ 미스캐토닉 박물관(9점)</li><li>□ 에식스 카운티 특급열차(7점)</li><li>□ 제단에 흘린 피(8점)</li><li>□ 차원 너머의 보이지 않는 존재(8점)</li><li>□ 파멸이 기다리는 곳(8점)</li><li>□ 시공간을 헤매다(8점)</li></ul></li></ul><p class="spacer"></p>
-<nav class="page-nav"><a class="pn pn-prev" href="f21d24234cc64cc8812512f7b76c2147.html"><span>← 이전</span><b>자주 묻는 질문</b></a><a class="pn pn-next" href="9266bf133314463bb159878988685618.html"><span>다음 →</span><b>후일담</b></a></nav>
+<nav class="page-nav"><div class="pn-col pn-prev"><span class="pn-label">← 이전</span><a class="pn" href="f21d24234cc64cc8812512f7b76c2147.html"><b>자주 묻는 질문</b></a></div><div class="pn-col pn-next"><span class="pn-label">다음 →</span><a class="pn" href="9266bf133314463bb159878988685618.html"><b>후일담</b></a></div></nav>
   </div>
   <footer class="site-foot">
     <p>본 안내서는 던위치의 유산(도전 모드) 캠페인의 팬 제작 자료를 읽기 좋게 재구성한 것입니다.</p>

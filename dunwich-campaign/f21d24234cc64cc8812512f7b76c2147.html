@@ -84,17 +84,18 @@ main{margin-left:var(--sb-w);}
   box-shadow:0 6px 22px rgba(0,0,0,.4);background:linear-gradient(180deg,#1d1926,#161320);}
 .toc-ico{font-size:18px;opacity:.8;}
 
-/* prev / next navigation */
-.page-nav{display:flex;gap:14px;margin:56px 0 8px;padding-top:30px;border-top:1px solid var(--line);}
-.pn{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:5px;padding:16px 18px;border:1px solid var(--line);
-  border-radius:11px;background:#15121b;transition:.18s;}
+/* prev / next navigation (supports branching: several destinations) */
+.page-nav{display:flex;gap:14px;margin:56px 0 8px;padding-top:30px;border-top:1px solid var(--line);align-items:flex-start;}
+.pn-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:8px;}
+.pn-col.pn-empty{visibility:hidden;}
+.pn-next{align-items:flex-end;text-align:right;}
+.pn-label{font-family:"Cinzel",serif;font-size:11.5px;letter-spacing:.14em;color:var(--gold);}
+.pn-branch{font-family:"Noto Sans KR",sans-serif;letter-spacing:0;font-size:11px;color:var(--ink-faint);}
+.pn{display:block;width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:11px;
+  background:#15121b;transition:.18s;}
 .pn:hover{border-color:var(--gold);background:#1b1724;}
-.pn-next{text-align:right;align-items:flex-end;}
-.pn span{font-family:"Cinzel",serif;font-size:11.5px;letter-spacing:.14em;color:var(--gold);}
-.pn b{color:var(--ink);font-weight:600;font-size:15px;line-height:1.4;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
+.pn b{display:block;color:var(--ink);font-weight:600;font-size:15px;line-height:1.4;}
 .pn:hover b{color:#fff;}
-.pn-empty{flex:1 1 0;border:none;background:none;}
 
 h2.bk{font-family:"Noto Serif KR",serif;font-weight:600;font-size:26px;color:var(--gold-soft);margin:46px 0 16px;line-height:1.35;}
 h3.bk{font-family:"Noto Serif KR",serif;font-weight:600;font-size:21px;color:#fff;margin:34px 0 12px;line-height:1.4;}
@@ -249,7 +250,7 @@ hr{border:none;border-top:1px solid var(--line);margin:34px 0;}
 <header class="page-head"><div class="ph-inner"><a class="ph-home" href="index.html">← 목차</a><span class="ph-kicker">✦ ✦ ✦</span><h1 class="ph-title">자주 묻는 질문</h1></div></header>
   <div class="reader">
 <p class="spacer"></p><h3 class="bk">시나리오</h3><h4 class="bk">도박장은 언제나 이긴다</h4><p><strong>Q. ‘감시의 눈길’ 이야기 카드는 어떻게 작동하나요?</strong></p><p>A. ‘감시의 눈길’은 동일한 장소 카드에 있는 [활성화] 행동 기능을 연속으로 수행하는 데 제약을 거는 카드입니다. ‘감시의 눈길’이 부착되지 않은 장소(장소 카드)에 있는 [활성화] 행동 기능을 격발할 경우 ‘감시의 눈길’을 해당 장소로 옮겨 부착합니다. 그러나 이미 ‘감시의 눈길’이 부착된 장소(장소 카드)에 있는 [활성화] 행동 기능을 격발할 경우, 현재 주요사건에 파멸을 1개 놓습니다.  가급적이면 들키지 않도록 클로버 클럽 내의 여러 곳을 돌아다니며 어울리시기 바랍니다.</p><p class="spacer"></p><h4 class="bk">제단에 흘린 피</h4><p><strong>Q. ‘나이트건트 처형자’의 문구에서 “자동 교전하지 않는다”는 무슨 뜻인가요?</strong></p><p>A. 기본적으로 적과 조사자가 같은 장소에 존재한다면, 그 적은 해당 조사자의 위협 영역에 들어갑니다(이를 교전이라고 칭합니다). ‘나이트건트 처형자’는 조사자와 같은 장소에 있더라도, 이렇게 위협 영역으로 자동으로 들어오지 않습니다. 물론 교전 행동 등을 사용하여 교전할 수는 있습니다.</p><p class="spacer"></p><p class="spacer"></p><h3 class="bk">공용 조우</h3><p><strong>Q. ‘뒤틀린 과거의 환영’에서 “당신의 버린 카드 더미를 섞는다”는 문구는 왜 존재하는 것인가요? 버린 카드 더미를 덱에 섞어넣으라는 뜻인가요?</strong></p><p>A. 이는 버린 카드 더미를 무작위로 만들어 게임에서 제거할 카드를 무작위로 선택하기 위함입니다. 버린 카드 더미를 덱에 섞어넣으라는 뜻이 아닙니다.</p><p class="spacer"></p><p><strong>Q. ‘소름끼치는 고요’로 버린 카드 중에 약점이 있는 경우에는 어떻게 되나요?</strong></p><p>A. “최후통첩: 산산이 조각난 장막”의 효과로 인해, 해당 약점을 덱에 곧바로 섞어넣습니다. 카드를 몇 장이나 버릴지는 신중하게 선택하세요.</p><p class="spacer"></p><p><strong>Q. ‘형언할 수 없는 기척’이 플레이 상태라면, ‘신속’ 카드를 플레이 하는 경우에도 행동을 소비해야 하나요?</strong></p><p>A. 그렇습니다. 예를 들어, 신화 단계에 ‘보호의 진’을 플레이하기 위해서는 행동 1번을 소비해야 합니다. 일반적으로 행동은 조사 단계의 자기 차례에 수행할 수 있지만, 이렇게 조우 카드의 효과로 소비하는 행동의 경우 소비한 행동 수만큼 자기 차례에 차감됩니다. 물론, 자기 차례에 수행할 수 있는 행동 횟수를 초과하여 행동을 소비할 수는 없습니다.</p><p class="spacer"></p><p><strong>Q. ‘형언할 수 없는 기척’ 사본 2장이 플레이 상태라면, 카드를 플레이하기 위한 추가 비용으로 행동을 2번 소비해야하나요?</strong></p><p>A. 그렇습니다. 축하드립니다만, 가급적 이러한 상황은 피하기 바랍니다. 이미 터진 상황이라고요? 신비주의자 팀원의 얼굴을 지긋이 바라봅시다.</p><p class="spacer"></p><p><strong>Q. ‘부정한 마을’에서 “당신의 버린 카드 더미를 섞어 새로 덱을 만든 후”라는 격발 조건은 어떤 상황을 뜻하나요?</strong></p><p>A. 기본 규칙에 따르면, 조사자 덱이 다 떨어진 상황에서 카드를 뽑아야 할 경우, 새로 덱을 만든 후 카드를 마저 뽑은 다음 공포를 1 받게 됩니다. 이 과정을 모두 처리한 후에 ‘부정한 마을’을 격발합니다. 이외에도 ‘장막 뒤에’의 강제 기능으로 덱을 다시 만든 경우 역시 ‘부정한 마을’을 격발합니다.</p><p><em>예시: ‘부정한 마을’에 이미 공포가 3개 놓여 있습니다. 동준이는 카드를 뽑는 과정에서 버린 카드 더미를 섞어 새로 덱을 만들었습니다. 카드 뽑기를 마저 한 다음 공포도 1 받은 후, ‘부정한 마을’을 격발합니다. 우선 ‘부정한 마을’에 공포를 1개 놓습니다. 그런 다음, 공포가 총 4개 놓였으므로 동준이의 덱 맨 윗장부터 카드 4장을 버립니다. 버린 카드 중에 약점이 있다면, “최후통첩: 산산이 조각난 장막”의 효과로 인해 덱에 다시 섞어넣아야 한다는 점을 기억해 두세요.</em></p><p class="spacer"></p><p><strong>Q. ‘헨리 아미티지 박사’의 [반응 격발] 기능으로 비플레이 상태로 치워두는 효과나 ‘납치 당하다’처럼 비플레이 상태로 만드는 효과를 방지할 수 있나요?</strong></p><p>A. 불가능합니다. ‘헨리 아미티지 박사’는 오직 게임에서 제거하는 효과만을 방지합니다.</p><p class="spacer"></p><p><strong>Q. ‘죽음서린 빛’의 강제 기능은 어떻게 해결하나요?</strong></p><p>&#x27;죽음서린 빛&#x27;의 효과로 덱 맨 위 카드를 공개해서 제거했다면, 정리 단계의 카드 뽑기로 덱 맨 위의 그 다음 장을 뽑게 됩니다. 제거하지 않았다면, 그 카드를 다시 덱 맨 위에 돌려놓고 정리 단계의 카드 뽑기로 방금 공개했던 그 카드를 뽑게 됩니다.</p>
-<nav class="page-nav"><a class="pn pn-prev" href="491d5224841f4020aeefba7877034abe.html"><span>← 이전</span><b>디자이너의 후기</b></a><a class="pn pn-next" href="cec82460ffee493cb0952b34ec880d17.html"><span>다음 →</span><b>업적 목록</b></a></nav>
+<nav class="page-nav"><div class="pn-col pn-prev"><span class="pn-label">← 이전</span><a class="pn" href="491d5224841f4020aeefba7877034abe.html"><b>디자이너의 후기</b></a></div><div class="pn-col pn-next"><span class="pn-label">다음 →</span><a class="pn" href="cec82460ffee493cb0952b34ec880d17.html"><b>업적 목록</b></a></div></nav>
   </div>
   <footer class="site-foot">
     <p>본 안내서는 던위치의 유산(도전 모드) 캠페인의 팬 제작 자료를 읽기 좋게 재구성한 것입니다.</p>

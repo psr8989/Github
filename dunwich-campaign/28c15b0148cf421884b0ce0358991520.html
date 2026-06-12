@@ -84,17 +84,18 @@ main{margin-left:var(--sb-w);}
   box-shadow:0 6px 22px rgba(0,0,0,.4);background:linear-gradient(180deg,#1d1926,#161320);}
 .toc-ico{font-size:18px;opacity:.8;}
 
-/* prev / next navigation */
-.page-nav{display:flex;gap:14px;margin:56px 0 8px;padding-top:30px;border-top:1px solid var(--line);}
-.pn{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:5px;padding:16px 18px;border:1px solid var(--line);
-  border-radius:11px;background:#15121b;transition:.18s;}
+/* prev / next navigation (supports branching: several destinations) */
+.page-nav{display:flex;gap:14px;margin:56px 0 8px;padding-top:30px;border-top:1px solid var(--line);align-items:flex-start;}
+.pn-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:8px;}
+.pn-col.pn-empty{visibility:hidden;}
+.pn-next{align-items:flex-end;text-align:right;}
+.pn-label{font-family:"Cinzel",serif;font-size:11.5px;letter-spacing:.14em;color:var(--gold);}
+.pn-branch{font-family:"Noto Sans KR",sans-serif;letter-spacing:0;font-size:11px;color:var(--ink-faint);}
+.pn{display:block;width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:11px;
+  background:#15121b;transition:.18s;}
 .pn:hover{border-color:var(--gold);background:#1b1724;}
-.pn-next{text-align:right;align-items:flex-end;}
-.pn span{font-family:"Cinzel",serif;font-size:11.5px;letter-spacing:.14em;color:var(--gold);}
-.pn b{color:var(--ink);font-weight:600;font-size:15px;line-height:1.4;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;}
+.pn b{display:block;color:var(--ink);font-weight:600;font-size:15px;line-height:1.4;}
 .pn:hover b{color:#fff;}
-.pn-empty{flex:1 1 0;border:none;background:none;}
 
 h2.bk{font-family:"Noto Serif KR",serif;font-weight:600;font-size:26px;color:var(--gold-soft);margin:46px 0 16px;line-height:1.35;}
 h3.bk{font-family:"Noto Serif KR",serif;font-weight:600;font-size:21px;color:#fff;margin:34px 0 12px;line-height:1.4;}
@@ -249,7 +250,7 @@ hr{border:none;border-top:1px solid var(--line);margin:34px 0;}
 <header class="page-head"><div class="ph-inner"><a class="ph-home" href="index.html">← 목차</a><span class="ph-kicker">✦ ✦ ✦</span><h1 class="ph-title">빠른 참조 &amp; 만든 사람들</h1></div></header>
   <div class="reader">
 <p class="spacer"></p><h4 class="bk">빠른 참조</h4><p><a href="index.html">경계</a></p><p><a href="index.html">무리</a></p><p><a href="index.html">동행</a></p><p><a href="index.html">최후통첩</a></p><p><a href="47ac5740bac54d3aa9406e94040ea43f.html">공허</a></p><p><a href="1d5b3466c4b949b1b60066afbd2a754f.html">열차에서 이동하기</a></p><p><a href="c2b14d1eae7d43f2b4d5ff7f13b12eb2.html">숨겨진 방</a></p><p><a href="c2b14d1eae7d43f2b4d5ff7f13b12eb2.html">납치당합니다</a></p><p><a href="61d09ea783f34fe885ccf49ca1f2b64c.html">무작위 장소 선택</a></p><p><a href="61d09ea783f34fe885ccf49ca1f2b64c.html">시끄러운 징</a></p><p class="spacer"></p><h4 class="bk">만든 사람들</h4><p><strong>도전 모드 캠페인 디자인:</strong> 아컴파일즈 작업팀(Bires, 엘케인, 최전기)</p><p><strong>플레이 테스터</strong></p><p>아컴파일즈 작업팀, 경성, 나르자, 리베리, 수현, 스카피, 염산우유, 원식, 임채욱, 지동준, 카시아, 칸풍기, 푸른이, 한지우, D.Wolf, FullMoon, JDW, KiHyun, Pltoo, Redjohn, Samari, Sydoa</p><p>아컴파일즈 커뮤니티가 운영될 수 있도록 물심양면으로 후원해주신 분들께도 감사드립니다.</p><p>&lt;아컴호러 카드게임&gt;의 기틀을 다져 주신 MJ Newman, Nate French, Josiah “Duke” Harrist, Nick Kory, Jeremy Zwirn 등 모든 Fantasy Flight Games 관계자 분께 감사의 말씀을 드립니다.</p><p>본 확장은 비공식 팬 제작 확장이며, Fantasy Flight Games를 비롯한 로컬라이저의 공식 허가를 받은 제품이 아님을 밝힙니다. 모든 원화의 권리는 해당 원화가에게 있습니다.</p><p>※ 본 확장과 관련해 궁금한 점이 있으시면 아컴파일즈(<a href="https://cafe.naver.com/arkhamfiles" target="_blank" rel="noopener">https://cafe.naver.com/arkhamfiles</a>)에 들어오셔서 질문을 남겨주세요.</p><p class="spacer"></p>
-<nav class="page-nav"><a class="pn pn-prev" href="9266bf133314463bb159878988685618.html"><span>← 이전</span><b>후일담</b></a><span class="pn pn-empty"></span></nav>
+<nav class="page-nav"><div class="pn-col pn-prev"><span class="pn-label">← 이전</span><a class="pn" href="9266bf133314463bb159878988685618.html"><b>후일담</b></a></div><div class="pn-col pn-next pn-empty"></div></nav>
   </div>
   <footer class="site-foot">
     <p>본 안내서는 던위치의 유산(도전 모드) 캠페인의 팬 제작 자료를 읽기 좋게 재구성한 것입니다.</p>
