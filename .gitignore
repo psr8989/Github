@@ -1,0 +1,13 @@
+# 자동 생성 / 캐시 (재생성 가능)
+catboost_info/
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+
+# 환경
+.venv/
+venv/
+.env
+
+# Claude Code 로컬 설정 (개인용)
+.claude/settings.local.json

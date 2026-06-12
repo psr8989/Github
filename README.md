@@ -11,7 +11,7 @@ GitHub Pages를 통해 배포된 인터랙티브 대시보드 목록입니다.
 
 > `머신러닝_과제.ipynb` 실행 결과 기반 — 마케팅 캠페인 수락 여부 이진 분류
 
-**👉 [https://psr8989.github.io/Github/campaign-dashboard/](https://psr8989.github.io/Github/campaign-dashboard/)**
+**👉 [https://psr8989.github.io/Github/dashboards/campaign-dashboard/](https://psr8989.github.io/Github/dashboards/campaign-dashboard/)**
 
 | 항목 | 내용 |
 |------|------|
@@ -32,7 +32,7 @@ GitHub Pages를 통해 배포된 인터랙티브 대시보드 목록입니다.
 
 > 입체적인 3D 버튼 디자인의 웹 계산기 — 사칙연산·퍼센트·부호 전환 및 키보드 입력 지원
 
-**👉 [https://psr8989.github.io/Github/3d-calculator/](https://psr8989.github.io/Github/3d-calculator/)**
+**👉 [https://psr8989.github.io/Github/dashboards/3d-calculator/](https://psr8989.github.io/Github/dashboards/3d-calculator/)**
 
 | 항목 | 내용 |
 |------|------|
@@ -47,7 +47,7 @@ GitHub Pages를 통해 배포된 인터랙티브 대시보드 목록입니다.
 
 > 아컴호러 카드게임 캠페인 안내서 — Notion 원문을 읽기 좋게 재구성한 정적 사이트
 
-**👉 [https://psr8989.github.io/Github/dunwich-campaign/](https://psr8989.github.io/Github/dunwich-campaign/)**
+**👉 [https://psr8989.github.io/Github/dashboards/dunwich-campaign/](https://psr8989.github.io/Github/dashboards/dunwich-campaign/)**
 
 | 항목 | 내용 |
 |------|------|
@@ -62,13 +62,15 @@ GitHub Pages를 통해 배포된 인터랙티브 대시보드 목록입니다.
 
 ```
 Github/
-├── campaign-dashboard/
-│   └── index.html              ← 캠페인 반응 예측 ML 대시보드 (노트북 기반)
-├── 3d-calculator/
-│   └── index.html              ← 3D 디자인 웹 계산기
-├── dunwich-campaign/
-│   ├── index.html              ← 던위치의 유산 캠페인 안내서 (재디자인)
-│   └── assets/                 ← 안내서 이미지 번들
+├── index.html                  ← 랜딩 페이지 (대시보드 포털)
+├── dashboards/
+│   ├── campaign-dashboard/
+│   │   └── index.html          ← 캠페인 반응 예측 ML 대시보드 (노트북 기반)
+│   ├── 3d-calculator/
+│   │   └── index.html          ← 3D 디자인 웹 계산기
+│   └── dunwich-campaign/
+│       ├── index.html          ← 던위치의 유산 캠페인 안내서 (재디자인)
+│       └── assets/             ← 안내서 이미지 번들
 └── README.md                   ← 이 파일 (대시보드 안내)
 ```
 
