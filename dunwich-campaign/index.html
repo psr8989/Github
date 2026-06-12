@@ -23,7 +23,9 @@ body{
   font-family:"Noto Sans KR",system-ui,-apple-system,sans-serif;
   font-weight:400;line-height:1.9;letter-spacing:.01em;font-size:17px;
   -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;-webkit-text-size-adjust:100%;
 }
+.reader p,.reader li,.reader h1,.reader h2,.reader h3,.reader h4,blockquote{overflow-wrap:break-word;word-break:break-word;}
 a{color:var(--gold-soft);text-decoration:none;border-bottom:1px solid rgba(201,162,75,.3);transition:.2s;}
 a:hover{color:#fff;border-color:var(--gold);}
 
@@ -140,13 +142,42 @@ hr{border:none;border-top:1px solid var(--line);margin:34px 0;}
 
 @media(max-width:960px){
   :root{--sb-w:0px;}
-  #navToggle{display:block;}
+  #navToggle{display:flex;align-items:center;justify-content:center;}
   #sidebar{transform:translateX(-100%);transition:transform .3s;width:284px;}
   #sidebar.open{transform:translateX(0);box-shadow:0 0 40px rgba(0,0,0,.6);}
   #sidebar.open ~ #overlay{display:block;}
   main{margin-left:0;}
   body{font-size:16px;line-height:1.85;}
   .hero{min-height:56vh;}
+  .reader{padding:6px 20px 30px;}
+  .chapter{scroll-margin-top:68px;padding:48px 0 16px;}
+}
+@media(max-width:560px){
+  body{font-size:15.5px;line-height:1.8;}
+  .reader{padding:4px 16px 26px;}
+  .hero{min-height:46vh;padding:64px 18px 40px;}
+  .hero-tag{font-size:10px;letter-spacing:.2em;margin-bottom:16px;}
+  .hero-title{font-size:clamp(32px,11vw,46px);}
+  .hero-desc{font-size:15px;margin-top:18px;}
+  .hero-scroll{margin-top:34px;}
+  .chapter{padding:38px 0 12px;}
+  .chapter-title{font-size:24px;margin-bottom:20px;padding-bottom:13px;}
+  .chap-kicker{font-size:11px;letter-spacing:.18em;margin-bottom:9px;}
+  .chap-end{margin-top:40px;}
+  .chap-end::before,.chap-end::after{width:60px;}
+  h2.bk{font-size:20.5px;margin:34px 0 13px;}
+  h3.bk{font-size:18px;margin:26px 0 10px;}
+  h4.bk{font-size:16px;margin:20px 0 7px;}
+  blockquote{padding:14px 18px;font-size:16px;margin:20px 0;}
+  ul,ol{padding-left:1.2em;}
+  .indent{padding-left:.85em;margin-left:.1em;}
+  figure{margin:22px 0;}
+  #navToggle{width:42px;height:42px;font-size:18px;top:12px;left:12px;}
+  #toTop{width:42px;height:42px;right:14px;bottom:14px;}
+  #lightbox{padding:12px;}
+  #lbClose{top:12px;right:14px;width:42px;height:42px;}
+  .brand-main{font-size:23px;}
+  .site-foot{padding:40px 18px 70px;}
 }
 
 </style>
