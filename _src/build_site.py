@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
 import json, html, re, os
 
-BLOCKS = json.load(open('notion_all.json', encoding='utf-8'))['block']
+# 입력 파일은 이 스크립트와 같은 폴더(_src/), 출력은 저장소 루트의 dashboards/ 아래
+BASE = os.path.dirname(os.path.abspath(__file__))   # _src/
+ROOT = os.path.dirname(BASE)                          # 저장소 루트
+def inp(name): return os.path.join(BASE, name)
+
+BLOCKS = json.load(open(inp('notion_all.json'), encoding='utf-8'))['block']
 TOP = '5f9dc660-554a-46e7-9147-908b56ce323c'
-OUTDIR = 'dashboards/dunwich-campaign'
+OUTDIR = os.path.join(ROOT, 'dashboards', 'dunwich-campaign')
 
 def val(bid):
     w = BLOCKS.get(bid)
@@ -220,9 +225,9 @@ def home_pagenav():
     nxt = [(page_file(first), chap_title[first])]
     return '<nav class="page-nav">%s%s</nav>' % (nav_col('', [], 'prev'), nav_col('다음 →', nxt, 'next'))
 
-TEMPLATE = open('template.html', encoding='utf-8').read()
-CSS = open('site.css', encoding='utf-8').read()
-JS = open('site.js', encoding='utf-8').read()
+TEMPLATE = open(inp('template.html'), encoding='utf-8').read()
+CSS = open(inp('site.css'), encoding='utf-8').read()
+JS = open(inp('site.js'), encoding='utf-8').read()
 
 def write_page(filename, title, header, body, pagenav_html):
     out = (TEMPLATE

@@ -21,19 +21,24 @@
 
 ---
 
-## 2. dunwich-campaign 빌드 파이프라인 (미추적이지만 재생성에 필요 · 유지)
+## 2. 빌드 입력 / 소스 — `_src/` 폴더 (배포 안 됨 · 작업용)
+
+> `_`로 시작해 GitHub Pages가 게시하지 않습니다. 사이트로 노출되지 않는 작업 파일은 여기에 둡니다.
+
+**dunwich-campaign 빌드 파이프라인**
 
 ```
-notion_all.json  ─┐
-template.html     ├─►  python build_site.py  ─►  dashboards/dunwich-campaign/*.html
-site.css          │
-site.js          ─┘
+_src/notion_all.json  ─┐
+_src/template.html     ├─►  python _src/build_site.py  ─►  dashboards/dunwich-campaign/*.html
+_src/site.css          │
+_src/site.js          ─┘
 ```
 
 | 파일 | 역할 |
 |------|------|
-| `build_site.py` | Notion 데이터 → HTML 생성기 |
-| `notion_all.json` (~1.1M) | Notion 원본 데이터(빌드 입력) |
-| `template.html`, `site.css`, `site.js` | 빌드용 템플릿/스타일/스크립트 |
+| `_src/build_site.py` | Notion 데이터 → HTML 생성기 (경로는 스크립트 위치 기준으로 자동 해석) |
+| `_src/notion_all.json` (~1.1M) | Notion 원본 데이터(빌드 입력) |
+| `_src/template.html`, `_src/site.css`, `_src/site.js` | 빌드용 템플릿/스타일/스크립트 |
+| `_src/머신러닝_과제.ipynb` | `campaign-dashboard`의 원본 노트북 |
 
-빌드: `python build_site.py` (저장소 루트에서 실행, `dashboards/dunwich-campaign/`에 페이지 출력)
+빌드: `python _src/build_site.py` (저장소 어디서 실행해도 됨 → `dashboards/dunwich-campaign/`에 출력)

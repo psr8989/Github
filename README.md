@@ -9,7 +9,7 @@ GitHub Pages를 통해 배포된 인터랙티브 대시보드 목록입니다.
 
 ### 1. 📊 캠페인 반응 예측 머신러닝 대시보드
 
-> `머신러닝_과제.ipynb` 실행 결과 기반 — 마케팅 캠페인 수락 여부 이진 분류
+> `_src/머신러닝_과제.ipynb` 실행 결과 기반 — 마케팅 캠페인 수락 여부 이진 분류
 
 **👉 [https://psr8989.github.io/Github/dashboards/campaign-dashboard/](https://psr8989.github.io/Github/dashboards/campaign-dashboard/)**
 
@@ -71,6 +71,7 @@ Github/
 │   └── dunwich-campaign/
 │       ├── index.html          ← 던위치의 유산 캠페인 안내서 (재디자인)
 │       └── assets/             ← 안내서 이미지 번들
+├── _src/                       ← 빌드 입력·소스 (게시 안 됨): build_site.py, notion_all.json, 노트북 등
 └── README.md                   ← 이 파일 (대시보드 안내)
 ```
 
