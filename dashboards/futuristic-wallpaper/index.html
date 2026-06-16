@@ -30,9 +30,13 @@
   .overlay {
     position: fixed; inset: 0; z-index: 1; pointer-events: none;
     background:
-      radial-gradient(1200px 900px at 70% -10%, rgba(70,120,180,0.20), transparent 60%),
-      radial-gradient(1000px 800px at 20% 110%, rgba(40,80,140,0.18), transparent 60%),
-      linear-gradient(180deg, rgba(6,10,20,0.15), rgba(4,7,14,0.55));
+      radial-gradient(1300px 1000px at 72% -12%, rgba(64,118,178,0.22), transparent 62%),
+      radial-gradient(1100px 900px at 18% 115%, rgba(36,72,128,0.20), transparent 60%),
+      /* 바닥 안개 */
+      linear-gradient(0deg, rgba(20,40,70,0.28), transparent 32%),
+      /* 가장자리 비네팅으로 시선 집중 */
+      radial-gradient(120% 120% at 50% 42%, transparent 48%, rgba(3,6,12,0.72) 100%),
+      linear-gradient(180deg, rgba(6,10,20,0.12), rgba(4,7,14,0.40));
   }
 
   /* === 콘텐츠 레이어 === */
@@ -160,12 +164,22 @@
 
 <script>
 /* =========================================================
-   1) 비 내리는 미래적 배경 — 빗줄기 + 바닥 물결 + 가끔 번개
+   1) 감성 비 배경 — 보케 + 원근 빗줄기(parallax) + 유리창 물방울
    ========================================================= */
 (function () {
   const canvas = document.getElementById('bg');
   const ctx = canvas.getContext('2d');
-  let w, h, dpr, drops, splashes, t = 0, flash = 0;
+  let w, h, dpr, t = 0, flash = 0;
+  let bokeh = [], layers = [], glass = [];
+
+  // 빗줄기 원근 레이어: [개수비, 길이, 두께, 속도, 밝기]
+  const LAYER_DEF = [
+    { density: 5200, len: [8, 16],  width: 0.7, speed: [3.5, 5.5], alpha: [0.04, 0.10] }, // 먼 비 (흐릿)
+    { density: 4200, len: [16, 28], width: 1.1, speed: [6, 9],     alpha: [0.08, 0.18] }, // 중간
+    { density: 6000, len: [28, 52], width: 1.7, speed: [11, 16],   alpha: [0.16, 0.32] }  // 가까운 비 (선명)
+  ];
+
+  function rand(a, b) { return a + Math.random() * (b - a); }
 
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -173,76 +187,149 @@
     h = canvas.height = innerHeight * dpr;
     canvas.style.width = innerWidth + 'px';
     canvas.style.height = innerHeight + 'px';
-    initDrops();
+    initAll();
   }
 
-  function initDrops() {
-    const count = Math.min(380, Math.floor((innerWidth * innerHeight) / 3200));
-    drops = [];
-    for (let i = 0; i < count; i++) drops.push(newDrop(true));
-    splashes = [];
+  function initAll() {
+    // 배경 보케(빛망울) — 깊이감과 감성
+    bokeh = [];
+    const bn = Math.min(14, Math.floor((innerWidth * innerHeight) / 90000));
+    const hues = [200, 205, 190, 215, 38]; // 차가운 블루/틸 + 가끔 따뜻한 앰버
+    for (let i = 0; i < bn; i++) {
+      bokeh.push({
+        x: Math.random() * w, y: Math.random() * h,
+        r: rand(60, 190) * dpr,
+        hue: hues[(Math.random() * hues.length) | 0],
+        a: rand(0.05, 0.13),
+        vx: rand(-0.12, 0.12) * dpr, vy: rand(-0.18, -0.04) * dpr,
+        ph: Math.random() * Math.PI * 2 // 깜빡임 위상
+      });
+    }
+
+    // 원근 빗줄기 레이어
+    layers = LAYER_DEF.map(def => {
+      const count = Math.floor((innerWidth * innerHeight) / def.density);
+      const arr = [];
+      for (let i = 0; i < count; i++) arr.push(newDrop(def, true));
+      return { def, drops: arr };
+    });
+
+    // 유리창에 맺힌 물방울
+    glass = [];
+    const gn = Math.min(26, Math.floor((innerWidth * innerHeight) / 60000));
+    for (let i = 0; i < gn; i++) glass.push(newGlass());
   }
 
-  function newDrop(spread) {
-    const speed = (8 + Math.random() * 10) * dpr;     // 낙하 속도
+  function newDrop(def, spread) {
     return {
-      x: Math.random() * (w + 200 * dpr) - 100 * dpr,
-      y: spread ? Math.random() * h : -20 * dpr,
-      len: (10 + Math.random() * 22) * dpr,            // 빗줄기 길이
-      speed,
-      sway: 1.4 * dpr,                                 // 비스듬한 정도
-      alpha: 0.12 + Math.random() * 0.28
+      x: Math.random() * (w + 160 * dpr) - 80 * dpr,
+      y: spread ? Math.random() * h : -rand(20, 120) * dpr,
+      len: rand(def.len[0], def.len[1]) * dpr,
+      speed: rand(def.speed[0], def.speed[1]) * dpr,
+      alpha: rand(def.alpha[0], def.alpha[1])
+    };
+  }
+
+  function newGlass() {
+    return {
+      x: Math.random() * w,
+      y: Math.random() * h,
+      r: rand(2, 6.5) * dpr,
+      vy: 0,
+      sliding: false,
+      wobble: rand(0, Math.PI * 2),
+      delay: rand(0, 400) // 흐르기 시작까지 대기
     };
   }
 
   function draw() {
     t++;
-    // 잔상 효과 — 완전 clear 대신 반투명 덮기
-    ctx.fillStyle = 'rgba(6,10,20,0.35)';
+
+    // 모션블러 잔상 — 깊은 밤 블루로 서서히 덮기
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = 'rgba(7,11,22,0.16)';
     ctx.fillRect(0, 0, w, h);
 
-    // 가끔 번개 섬광
-    if (Math.random() < 0.0025 && flash <= 0) flash = 1;
+    // 드물고 부드러운 번개
+    if (Math.random() < 0.0016 && flash <= 0) flash = 1;
     if (flash > 0) {
-      ctx.fillStyle = `rgba(140,180,230,${flash * 0.10})`;
+      ctx.fillStyle = `rgba(150,185,235,${flash * 0.06})`;
       ctx.fillRect(0, 0, w, h);
-      flash -= 0.04;
+      flash -= 0.03;
     }
 
-    // 빗줄기
+    // 보케(빛망울) — 부드러운 글로우
+    ctx.globalCompositeOperation = 'lighter';
+    for (const b of bokeh) {
+      b.x += b.vx; b.y += b.vy;
+      if (b.y < -b.r) { b.y = h + b.r; b.x = Math.random() * w; }
+      if (b.x < -b.r) b.x = w + b.r; else if (b.x > w + b.r) b.x = -b.r;
+      const tw = b.a * (0.7 + 0.3 * Math.sin(t * 0.01 + b.ph)); // 은은한 명멸
+      const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+      g.addColorStop(0, `hsla(${b.hue},80%,70%,${tw})`);
+      g.addColorStop(1, `hsla(${b.hue},80%,70%,0)`);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+
+    // 원근 빗줄기 — 머리쪽이 밝고 꼬리는 잔상으로 흐려짐
     ctx.lineCap = 'round';
-    for (const d of drops) {
-      ctx.strokeStyle = `rgba(150,200,255,${d.alpha})`;
-      ctx.lineWidth = 1.1 * dpr;
-      ctx.beginPath();
-      ctx.moveTo(d.x, d.y);
-      ctx.lineTo(d.x - d.sway * (d.len / (12 * dpr)), d.y + d.len);
-      ctx.stroke();
+    const sway = 2.0 * dpr; // 바람에 비스듬히
+    for (const layer of layers) {
+      const wdt = layer.def.width * dpr;
+      for (const d of layer.drops) {
+        const tailX = d.x - sway * (d.len / (30 * dpr));
+        const grad = ctx.createLinearGradient(d.x, d.y, tailX, d.y + d.len);
+        grad.addColorStop(0, `rgba(190,220,255,${d.alpha})`);
+        grad.addColorStop(1, `rgba(150,195,255,0)`);
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = wdt;
+        ctx.beginPath();
+        ctx.moveTo(d.x, d.y);
+        ctx.lineTo(tailX, d.y + d.len);
+        ctx.stroke();
 
-      d.y += d.speed;
-      d.x -= d.sway * 0.4;
-
-      if (d.y > h) {
-        // 바닥에 닿으면 물결 생성 후 재배치
-        if (Math.random() < 0.5)
-          splashes.push({ x: d.x, y: h - Math.random() * 6 * dpr, r: 1, a: 0.4 });
-        Object.assign(d, newDrop(false));
+        d.y += d.speed;
+        d.x -= sway * 0.18;
+        if (d.y > h) Object.assign(d, newDrop(layer.def, false));
       }
     }
 
-    // 바닥 물결(splash ring)
-    for (let i = splashes.length - 1; i >= 0; i--) {
-      const s = splashes[i];
-      ctx.strokeStyle = `rgba(150,200,255,${s.a})`;
-      ctx.lineWidth = 1 * dpr;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r * dpr, Math.PI, Math.PI * 2);
-      ctx.stroke();
-      s.r += 0.7; s.a -= 0.025;
-      if (s.a <= 0) splashes.splice(i, 1);
+    // 유리창 물방울 — 맺혔다가 또르르 흘러내림
+    for (const dr of glass) {
+      if (dr.delay > 0) { dr.delay--; }
+      else if (!dr.sliding) {
+        // 일정 확률로 흐르기 시작 (큰 방울일수록 잘 흐름)
+        if (Math.random() < 0.002 + dr.r / (4000 * dpr)) dr.sliding = true;
+      } else {
+        dr.vy += 0.06 * dpr;                       // 중력 가속
+        dr.vy = Math.min(dr.vy, 3.2 * dpr);
+        dr.y += dr.vy;
+        dr.wobble += 0.25;
+        dr.x += Math.sin(dr.wobble) * 0.4 * dpr;   // 미세한 좌우 흔들림
+        dr.r *= 0.997;                              // 흐르며 작아짐
+        if (dr.y > h + 10 * dpr || dr.r < 1.2 * dpr) Object.assign(dr, newGlass(), { y: -rand(0, 60) * dpr });
+      }
+      drawGlassDrop(dr);
     }
 
     requestAnimationFrame(draw);
+  }
+
+  // 유리에 맺힌 물방울 — 굴절 하이라이트로 입체감
+  function drawGlassDrop(dr) {
+    const { x, y, r } = dr;
+    // 본체(살짝 어둡고 투명한 렌즈)
+    const body = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r);
+    body.addColorStop(0, 'rgba(210,230,255,0.18)');
+    body.addColorStop(0.7, 'rgba(120,160,210,0.10)');
+    body.addColorStop(1, 'rgba(90,130,180,0.02)');
+    ctx.fillStyle = body;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    // 작은 반짝임(빛 반사)
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.beginPath(); ctx.arc(x - r * 0.35, y - r * 0.35, r * 0.28, 0, Math.PI * 2); ctx.fill();
   }
 
   addEventListener('resize', resize);
