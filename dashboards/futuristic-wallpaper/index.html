@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FUTURE BOARD · 라이브 배경 & 날씨</title>
+<style>
+  :root {
+    --neon: #5ad7ff;
+    --text: #eaf6ff;
+    --muted: #8fa6c4;
+    --panel: rgba(12, 20, 38, 0.42);
+    --panel-border: rgba(120, 200, 255, 0.16);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: "Segoe UI", "Malgun Gothic", -apple-system, sans-serif;
+    color: var(--text);
+    background: #060a14;
+    position: relative;
+  }
+
+  /* === 비 내리는 배경 캔버스 === */
+  #bg {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    display: block; z-index: 0;
+  }
+  .overlay {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background:
+      radial-gradient(1200px 900px at 70% -10%, rgba(70,120,180,0.20), transparent 60%),
+      radial-gradient(1000px 800px at 20% 110%, rgba(40,80,140,0.18), transparent 60%),
+      linear-gradient(180deg, rgba(6,10,20,0.15), rgba(4,7,14,0.55));
+  }
+
+  /* === 콘텐츠 레이어 === */
+  .stage {
+    position: relative; z-index: 2;
+    height: 100%;
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding: clamp(1.5rem, 4vh, 3.5rem) clamp(1.2rem, 3vw, 3rem);
+  }
+
+  /* 상단: 시계 (콤팩트하게) */
+  .clock-wrap {
+    display: flex; align-items: baseline; gap: 1rem;
+    flex-wrap: wrap; justify-content: center;
+  }
+  .clock {
+    font-size: clamp(1.7rem, 4vw, 2.7rem);
+    font-weight: 200;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 12px rgba(90,215,255,0.4);
+  }
+  .clock .sec { color: var(--neon); font-size: 0.42em; vertical-align: super; margin-left: 0.1em; }
+  .date {
+    font-size: clamp(0.8rem, 1.4vw, 1rem);
+    color: var(--muted); letter-spacing: 0.12em;
+    font-weight: 300;
+  }
+
+  /* 현재 날씨 패널 */
+  .now {
+    margin-top: clamp(1.2rem, 3vh, 2.2rem);
+    display: flex; align-items: center; gap: clamp(1rem, 3vw, 2.4rem);
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 22px;
+    padding: clamp(0.9rem, 2vw, 1.5rem) clamp(1.4rem, 4vw, 2.8rem);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.03);
+  }
+  .now .ico { font-size: clamp(2.6rem, 7vw, 4.2rem); filter: drop-shadow(0 0 12px rgba(90,215,255,0.4)); }
+  .now .temp { font-size: clamp(2.3rem, 7vw, 4rem); font-weight: 300; line-height: 1; }
+  .now .temp sup { font-size: 0.4em; color: var(--muted); }
+  .now .meta { font-size: 0.9rem; color: var(--muted); line-height: 1.7; }
+  .now .meta b { color: var(--text); font-weight: 600; }
+  .chip {
+    display: inline-block; margin-top: 0.4rem;
+    padding: 0.15rem 0.7rem; border-radius: 999px;
+    font-size: 0.78rem; letter-spacing: 0.05em;
+    border: 1px solid var(--panel-border);
+  }
+  /* 자외선 지수 색상 단계 */
+  .uv { font-weight: 700; }
+  .uv-low    { color: #4ade80; }
+  .uv-mod    { color: #facc15; }
+  .uv-high   { color: #fb923c; }
+  .uv-vhigh  { color: #f87171; }
+  .uv-extreme{ color: #c084fc; }
+
+  .spacer { flex: 1; }
+
+  /* 주간 예보 */
+  .week-title {
+    color: var(--muted);
+    letter-spacing: 0.35em; font-size: 0.75rem; text-transform: uppercase;
+    margin-bottom: 0.9rem;
+  }
+  .week {
+    width: 100%; max-width: 1080px;
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.7rem;
+    margin-bottom: clamp(1rem, 4vh, 2.5rem);
+  }
+  .day {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    padding: 0.85rem 0.4rem;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+  .day:hover { transform: translateY(-4px); border-color: var(--neon); }
+  .day.today { border-color: var(--neon); box-shadow: 0 0 24px rgba(90,215,255,0.22); }
+  .day .dname { font-size: 0.8rem; color: var(--muted); letter-spacing: 0.1em; }
+  .day .dico { font-size: 1.8rem; margin: 0.4rem 0; }
+  .day .dmax { font-size: 1.05rem; font-weight: 600; }
+  .day .dmin { font-size: 0.88rem; color: var(--muted); }
+  .day .dpop { margin-top: 0.35rem; font-size: 0.78rem; color: #5ad7ff; font-weight: 600; }
+  .day .duv  { margin-top: 0.25rem; font-size: 0.72rem; }
+
+  @media (max-width: 720px) {
+    .week { grid-template-columns: repeat(4, 1fr); }
+    .now { flex-wrap: wrap; justify-content: center; text-align: center; }
+  }
+</style>
+</head>
+<body>
+  <canvas id="bg"></canvas>
+  <div class="overlay"></div>
+
+  <div class="stage">
+    <div class="clock-wrap">
+      <div class="clock" id="clock">--:--<span class="sec">--</span></div>
+      <div class="date" id="date">로딩 중…</div>
+    </div>
+
+    <div class="now" id="now">
+      <div class="ico" id="nowIco">⏳</div>
+      <div>
+        <div class="temp" id="nowTemp">--<sup>°C</sup></div>
+        <div class="chip" id="nowDesc">날씨 불러오는 중…</div>
+      </div>
+      <div class="meta" id="nowMeta"></div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="week-title">이번 주 예보</div>
+    <div class="week" id="week"></div>
+  </div>
+
+<script>
+/* =========================================================
+   1) 비 내리는 미래적 배경 — 빗줄기 + 바닥 물결 + 가끔 번개
+   ========================================================= */
+(function () {
+  const canvas = document.getElementById('bg');
+  const ctx = canvas.getContext('2d');
+  let w, h, dpr, drops, splashes, t = 0, flash = 0;
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = canvas.width = innerWidth * dpr;
+    h = canvas.height = innerHeight * dpr;
+    canvas.style.width = innerWidth + 'px';
+    canvas.style.height = innerHeight + 'px';
+    initDrops();
+  }
+
+  function initDrops() {
+    const count = Math.min(380, Math.floor((innerWidth * innerHeight) / 3200));
+    drops = [];
+    for (let i = 0; i < count; i++) drops.push(newDrop(true));
+    splashes = [];
+  }
+
+  function newDrop(spread) {
+    const speed = (8 + Math.random() * 10) * dpr;     // 낙하 속도
+    return {
+      x: Math.random() * (w + 200 * dpr) - 100 * dpr,
+      y: spread ? Math.random() * h : -20 * dpr,
+      len: (10 + Math.random() * 22) * dpr,            // 빗줄기 길이
+      speed,
+      sway: 1.4 * dpr,                                 // 비스듬한 정도
+      alpha: 0.12 + Math.random() * 0.28
+    };
+  }
+
+  function draw() {
+    t++;
+    // 잔상 효과 — 완전 clear 대신 반투명 덮기
+    ctx.fillStyle = 'rgba(6,10,20,0.35)';
+    ctx.fillRect(0, 0, w, h);
+
+    // 가끔 번개 섬광
+    if (Math.random() < 0.0025 && flash <= 0) flash = 1;
+    if (flash > 0) {
+      ctx.fillStyle = `rgba(140,180,230,${flash * 0.10})`;
+      ctx.fillRect(0, 0, w, h);
+      flash -= 0.04;
+    }
+
+    // 빗줄기
+    ctx.lineCap = 'round';
+    for (const d of drops) {
+      ctx.strokeStyle = `rgba(150,200,255,${d.alpha})`;
+      ctx.lineWidth = 1.1 * dpr;
+      ctx.beginPath();
+      ctx.moveTo(d.x, d.y);
+      ctx.lineTo(d.x - d.sway * (d.len / (12 * dpr)), d.y + d.len);
+      ctx.stroke();
+
+      d.y += d.speed;
+      d.x -= d.sway * 0.4;
+
+      if (d.y > h) {
+        // 바닥에 닿으면 물결 생성 후 재배치
+        if (Math.random() < 0.5)
+          splashes.push({ x: d.x, y: h - Math.random() * 6 * dpr, r: 1, a: 0.4 });
+        Object.assign(d, newDrop(false));
+      }
+    }
+
+    // 바닥 물결(splash ring)
+    for (let i = splashes.length - 1; i >= 0; i--) {
+      const s = splashes[i];
+      ctx.strokeStyle = `rgba(150,200,255,${s.a})`;
+      ctx.lineWidth = 1 * dpr;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r * dpr, Math.PI, Math.PI * 2);
+      ctx.stroke();
+      s.r += 0.7; s.a -= 0.025;
+      if (s.a <= 0) splashes.splice(i, 1);
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  addEventListener('resize', resize);
+  resize();
+  draw();
+})();
+
+/* =========================================================
+   2) 시계 / 날짜
+   ========================================================= */
+(function () {
+  const elClock = document.getElementById('clock');
+  const elDate = document.getElementById('date');
+  const days = ['일', '월', '화', '수', '목', '금', '토'];
+  function tick() {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    const ss = String(d.getSeconds()).padStart(2, '0');
+    elClock.innerHTML = `${hh}:${mm}<span class="sec">${ss}</span>`;
+    elDate.textContent = `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()} (${days[d.getDay()]})`;
+    requestAnimationFrame(() => setTimeout(tick, 250));
+  }
+  tick();
+})();
+
+/* =========================================================
+   3) 날씨 (Open-Meteo · API 키 불필요 · 현재 위치 기준)
+   ========================================================= */
+(function () {
+  const WMO = {
+    0:  ['☀️', '맑음'],          1: ['🌤️', '대체로 맑음'], 2: ['⛅', '구름 조금'],
+    3:  ['☁️', '흐림'],          45:['🌫️', '안개'],        48:['🌫️', '서리 안개'],
+    51:['🌦️', '약한 이슬비'],    53:['🌦️', '이슬비'],      55:['🌧️', '짙은 이슬비'],
+    61:['🌧️', '약한 비'],        63:['🌧️', '비'],          65:['🌧️', '강한 비'],
+    66:['🌧️', '얼어붙는 비'],    67:['🌧️', '강한 어는비'],
+    71:['🌨️', '약한 눈'],        73:['❄️', '눈'],           75:['❄️', '강한 눈'],
+    77:['🌨️', '싸락눈'],
+    80:['🌦️', '약한 소나기'],    81:['🌧️', '소나기'],      82:['⛈️', '강한 소나기'],
+    85:['🌨️', '소낙눈'],         86:['❄️', '강한 소낙눈'],
+    95:['⛈️', '천둥번개'],        96:['⛈️', '뇌우·우박'],    99:['⛈️', '강한 뇌우']
+  };
+  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+
+  function uvClass(uv) {
+    if (uv == null) return ['uv-mod', '—'];
+    if (uv < 3)  return ['uv-low', '낮음'];
+    if (uv < 6)  return ['uv-mod', '보통'];
+    if (uv < 8)  return ['uv-high', '높음'];
+    if (uv < 11) return ['uv-vhigh', '매우높음'];
+    return ['uv-extreme', '위험'];
+  }
+  const wmo = (c) => WMO[c] || ['❓', '알 수 없음'];
+
+  async function fetchWeather(lat, lon) {
+    const url = `https://api.open-meteo.com/v1/forecast`
+      + `?latitude=${lat}&longitude=${lon}`
+      + `&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,uv_index`
+      + `&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max,precipitation_probability_max`
+      + `&timezone=auto&forecast_days=7`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('weather fetch failed');
+    render(await res.json());
+  }
+
+  function render(data) {
+    const c = data.current;
+    const [ico, desc] = wmo(c.weather_code);
+    document.getElementById('nowIco').textContent = ico;
+    document.getElementById('nowTemp').innerHTML = `${Math.round(c.temperature_2m)}<sup>°C</sup>`;
+    document.getElementById('nowDesc').textContent = desc;
+
+    const [ucls, utxt] = uvClass(c.uv_index);
+    document.getElementById('nowMeta').innerHTML =
+      `체감 <b>${Math.round(c.apparent_temperature)}°</b>　습도 <b>${c.relative_humidity_2m}%</b><br>`
+      + `바람 <b>${Math.round(c.wind_speed_10m)}km/h</b><br>`
+      + `자외선 <span class="uv ${ucls}">${(c.uv_index ?? 0).toFixed(1)} · ${utxt}</span>`;
+
+    const wk = document.getElementById('week');
+    wk.innerHTML = '';
+    const d = data.daily;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    d.time.forEach((iso, i) => {
+      const dt = new Date(iso + 'T00:00');
+      const [dico] = wmo(d.weather_code[i]);
+      const [ducls] = uvClass(d.uv_index_max[i]);
+      const isToday = iso === todayStr;
+      const cell = document.createElement('div');
+      cell.className = 'day' + (isToday ? ' today' : '');
+      const pop = d.precipitation_probability_max ? d.precipitation_probability_max[i] : null;
+      cell.innerHTML =
+        `<div class="dname">${isToday ? '오늘' : dayNames[dt.getDay()]}</div>`
+        + `<div class="dico">${dico}</div>`
+        + `<div class="dmax">${Math.round(d.temperature_2m_max[i])}°</div>`
+        + `<div class="dmin">${Math.round(d.temperature_2m_min[i])}°</div>`
+        + `<div class="dpop">💧 ${pop == null ? '-' : pop}%</div>`
+        + `<div class="duv"><span class="uv ${ducls}">UV ${Math.round(d.uv_index_max[i])}</span></div>`;
+      wk.appendChild(cell);
+    });
+  }
+
+  // 현재 위치 기준. 권한 거부/미지원 시 조용히 서울로 폴백.
+  function start() {
+    const seoul = () => fetchWeather(37.566, 126.978).catch(() => {});
+    if (!navigator.geolocation) { seoul(); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => fetchWeather(pos.coords.latitude.toFixed(3), pos.coords.longitude.toFixed(3)).catch(seoul),
+      seoul,
+      { timeout: 8000, enableHighAccuracy: false }
+    );
+  }
+  start();
+})();
+</script>
+</body>
+</html>
