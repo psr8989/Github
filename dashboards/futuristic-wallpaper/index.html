@@ -6,339 +6,146 @@
 <title>FUTURE BOARD · 라이브 배경 & 날씨</title>
 <style>
   :root {
-    --neon: #5ad7ff;
-    --text: #eaf6ff;
-    --muted: #8fa6c4;
-    --panel: rgba(12, 20, 38, 0.42);
-    --panel-border: rgba(120, 200, 255, 0.16);
+    --neon: #7cc8ff;
+    --text: #eef6ff;
+    --muted: #b6c6dc;
+    --panel: rgba(10, 18, 34, 0.40);
+    --panel-border: rgba(150, 200, 255, 0.18);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { height: 100%; overflow: hidden; }
   body {
     font-family: "Segoe UI", "Malgun Gothic", -apple-system, sans-serif;
     color: var(--text);
-    background: #060a14;
-    position: relative;
+    background: #05080f;
   }
 
-  /* === 비 내리는 배경 캔버스 === */
+  /* === 배경: 유튜브 비 영상 (화면 꽉 채우기) === */
   #bg {
-    position: fixed; inset: 0;
-    width: 100%; height: 100%;
-    display: block; z-index: 0;
+    position: fixed; inset: 0; z-index: 0; overflow: hidden;
+    background: #05080f;
   }
-  .overlay {
+  #bg iframe {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100vw; height: 56.25vw;       /* 16:9 비율 유지하며 cover */
+    min-width: 177.78vh; min-height: 100vh;
+    border: 0; pointer-events: none;
+  }
+  /* 위젯 가독성을 위한 모서리 스크림 */
+  .scrim {
     position: fixed; inset: 0; z-index: 1; pointer-events: none;
     background:
-      radial-gradient(1300px 1000px at 72% -12%, rgba(64,118,178,0.22), transparent 62%),
-      radial-gradient(1100px 900px at 18% 115%, rgba(36,72,128,0.20), transparent 60%),
-      /* 바닥 안개 */
-      linear-gradient(0deg, rgba(20,40,70,0.28), transparent 32%),
-      /* 가장자리 비네팅으로 시선 집중 */
-      radial-gradient(120% 120% at 50% 42%, transparent 48%, rgba(3,6,12,0.72) 100%),
-      linear-gradient(180deg, rgba(6,10,20,0.12), rgba(4,7,14,0.40));
+      radial-gradient(560px 280px at 0% 0%, rgba(0,0,0,0.45), transparent 70%),
+      radial-gradient(720px 280px at 100% 0%, rgba(0,0,0,0.42), transparent 72%),
+      linear-gradient(180deg, rgba(4,8,16,0.30), transparent 16%);
   }
 
-  /* === 콘텐츠 레이어 === */
-  .stage {
-    position: relative; z-index: 2;
-    height: 100%;
-    display: flex; flex-direction: column;
-    align-items: center;
-    padding: clamp(1.5rem, 4vh, 3.5rem) clamp(1.2rem, 3vw, 3rem);
-  }
+  /* === HUD (위젯) === */
+  .hud { position: fixed; top: 18px; z-index: 2; }
+  .hud-left { left: 22px; }
+  .hud-right { right: 22px; }
 
-  /* 상단: 시계 (콤팩트하게) */
-  .clock-wrap {
-    display: flex; align-items: baseline; gap: 1rem;
-    flex-wrap: wrap; justify-content: center;
-  }
+  /* 시계 / 날짜 */
   .clock {
-    font-size: clamp(1.7rem, 4vw, 2.7rem);
-    font-weight: 200;
-    letter-spacing: 0.04em;
-    line-height: 1;
+    font-size: clamp(1.4rem, 2.6vw, 1.95rem);
+    font-weight: 300; letter-spacing: 0.03em; line-height: 1;
     font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 12px rgba(90,215,255,0.4);
+    text-shadow: 0 1px 12px rgba(0,0,0,0.55);
   }
-  .clock .sec { color: var(--neon); font-size: 0.42em; vertical-align: super; margin-left: 0.1em; }
+  .clock .sec { color: var(--neon); font-size: 0.45em; vertical-align: super; margin-left: 0.12em; }
   .date {
-    font-size: clamp(0.8rem, 1.4vw, 1rem);
-    color: var(--muted); letter-spacing: 0.12em;
-    font-weight: 300;
+    margin-top: 4px; font-size: 0.78rem; color: var(--muted);
+    letter-spacing: 0.08em; text-shadow: 0 1px 8px rgba(0,0,0,0.6);
   }
 
   /* 현재 날씨 패널 */
   .now {
-    margin-top: clamp(1.2rem, 3vh, 2.2rem);
-    display: flex; align-items: center; gap: clamp(1rem, 3vw, 2.4rem);
-    background: var(--panel);
-    border: 1px solid var(--panel-border);
-    border-radius: 22px;
-    padding: clamp(0.9rem, 2vw, 1.5rem) clamp(1.4rem, 4vw, 2.8rem);
-    backdrop-filter: blur(14px) saturate(140%);
-    -webkit-backdrop-filter: blur(14px) saturate(140%);
-    box-shadow: 0 8px 40px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.03);
-  }
-  .now .ico { font-size: clamp(2.6rem, 7vw, 4.2rem); filter: drop-shadow(0 0 12px rgba(90,215,255,0.4)); }
-  .now .temp { font-size: clamp(2.3rem, 7vw, 4rem); font-weight: 300; line-height: 1; }
-  .now .temp sup { font-size: 0.4em; color: var(--muted); }
-  .now .meta { font-size: 0.9rem; color: var(--muted); line-height: 1.7; }
-  .now .meta b { color: var(--text); font-weight: 600; }
-  .chip {
-    display: inline-block; margin-top: 0.4rem;
-    padding: 0.15rem 0.7rem; border-radius: 999px;
-    font-size: 0.78rem; letter-spacing: 0.05em;
-    border: 1px solid var(--panel-border);
-  }
-  /* 자외선 지수 색상 단계 */
-  .uv { font-weight: 700; }
-  .uv-low    { color: #4ade80; }
-  .uv-mod    { color: #facc15; }
-  .uv-high   { color: #fb923c; }
-  .uv-vhigh  { color: #f87171; }
-  .uv-extreme{ color: #c084fc; }
-
-  .spacer { flex: 1; }
-
-  /* 주간 예보 */
-  .week-title {
-    color: var(--muted);
-    letter-spacing: 0.35em; font-size: 0.75rem; text-transform: uppercase;
-    margin-bottom: 0.9rem;
-  }
-  .week {
-    width: 100%; max-width: 1080px;
-    display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.7rem;
-    margin-bottom: clamp(1rem, 4vh, 2.5rem);
-  }
-  .day {
+    margin-top: 10px;
+    display: inline-flex; align-items: center; gap: 14px;
     background: var(--panel);
     border: 1px solid var(--panel-border);
     border-radius: 16px;
-    padding: 0.85rem 0.4rem;
-    text-align: center;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    padding: 10px 16px;
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    box-shadow: 0 6px 26px rgba(0,0,0,0.35);
   }
-  .day:hover { transform: translateY(-4px); border-color: var(--neon); }
-  .day.today { border-color: var(--neon); box-shadow: 0 0 24px rgba(90,215,255,0.22); }
-  .day .dname { font-size: 0.8rem; color: var(--muted); letter-spacing: 0.1em; }
-  .day .dico { font-size: 1.8rem; margin: 0.4rem 0; }
-  .day .dmax { font-size: 1.05rem; font-weight: 600; }
-  .day .dmin { font-size: 0.88rem; color: var(--muted); }
-  .day .dpop { margin-top: 0.35rem; font-size: 0.78rem; color: #5ad7ff; font-weight: 600; }
-  .day .duv  { margin-top: 0.25rem; font-size: 0.72rem; }
+  .now .ico { font-size: 2.1rem; filter: drop-shadow(0 0 8px rgba(124,200,255,0.35)); }
+  .now .temp { font-size: 1.9rem; font-weight: 300; line-height: 1; }
+  .now .temp sup { font-size: 0.42em; color: var(--muted); }
+  .now .desc { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+  .now .meta { font-size: 0.72rem; color: var(--muted); line-height: 1.55; }
+  .now .meta b { color: var(--text); font-weight: 600; }
 
-  @media (max-width: 720px) {
-    .week { grid-template-columns: repeat(4, 1fr); }
-    .now { flex-wrap: wrap; justify-content: center; text-align: center; }
+  /* 자외선 색상 단계 */
+  .uv { font-weight: 700; }
+  .uv-low    { color: #6ee7a8; }
+  .uv-mod    { color: #fde047; }
+  .uv-high   { color: #fdba74; }
+  .uv-vhigh  { color: #fca5a5; }
+  .uv-extreme{ color: #d8b4fe; }
+
+  /* 주간 예보 (우측 상단, 작은 스트립) */
+  .week {
+    display: flex; gap: 6px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    padding: 9px 11px;
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    box-shadow: 0 6px 26px rgba(0,0,0,0.35);
+  }
+  .day {
+    width: 50px; text-align: center;
+    padding: 2px 0; border-radius: 9px;
+    transition: background 0.2s ease;
+  }
+  .day.today { background: rgba(124,200,255,0.14); }
+  .day .dname { font-size: 0.62rem; color: var(--muted); letter-spacing: 0.04em; }
+  .day .dico { font-size: 1.25rem; margin: 1px 0; line-height: 1; }
+  .day .dmax { font-size: 0.78rem; font-weight: 700; }
+  .day .dmin { font-size: 0.66rem; color: var(--muted); }
+  .day .dpop { font-size: 0.6rem; color: var(--neon); font-weight: 600; margin-top: 1px; }
+  .day .duv  { font-size: 0.58rem; margin-top: 1px; }
+
+  @media (max-width: 760px) {
+    .day { width: 38px; }
+    .day .dpop, .day .duv { display: none; }
   }
 </style>
 </head>
 <body>
-  <canvas id="bg"></canvas>
-  <div class="overlay"></div>
+  <div id="bg">
+    <iframe
+      src="https://www.youtube.com/embed/mSJ02KRkTYs?autoplay=1&mute=1&controls=0&loop=1&playlist=mSJ02KRkTYs&modestbranding=1&playsinline=1&disablekb=1&fs=0&rel=0&iv_load_policy=3&start=3"
+      allow="autoplay; encrypted-media" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  </div>
+  <div class="scrim"></div>
 
-  <div class="stage">
-    <div class="clock-wrap">
-      <div class="clock" id="clock">--:--<span class="sec">--</span></div>
-      <div class="date" id="date">로딩 중…</div>
-    </div>
-
+  <!-- 좌측 상단: 시계 + 현재 날씨 -->
+  <div class="hud hud-left">
+    <div class="clock" id="clock">--:--<span class="sec">--</span></div>
+    <div class="date" id="date">로딩 중…</div>
     <div class="now" id="now">
       <div class="ico" id="nowIco">⏳</div>
       <div>
         <div class="temp" id="nowTemp">--<sup>°C</sup></div>
-        <div class="chip" id="nowDesc">날씨 불러오는 중…</div>
+        <div class="desc" id="nowDesc">날씨 불러오는 중…</div>
       </div>
       <div class="meta" id="nowMeta"></div>
     </div>
+  </div>
 
-    <div class="spacer"></div>
-
-    <div class="week-title">이번 주 예보</div>
+  <!-- 우측 상단: 주간 예보 -->
+  <div class="hud hud-right">
     <div class="week" id="week"></div>
   </div>
 
 <script>
 /* =========================================================
-   1) 감성 비 배경 — 보케 + 원근 빗줄기(parallax) + 유리창 물방울
-   ========================================================= */
-(function () {
-  const canvas = document.getElementById('bg');
-  const ctx = canvas.getContext('2d');
-  let w, h, dpr, t = 0, flash = 0;
-  let bokeh = [], layers = [], glass = [];
-
-  // 빗줄기 원근 레이어: [개수비, 길이, 두께, 속도, 밝기]
-  const LAYER_DEF = [
-    { density: 5200, len: [8, 16],  width: 0.7, speed: [3.5, 5.5], alpha: [0.04, 0.10] }, // 먼 비 (흐릿)
-    { density: 4200, len: [16, 28], width: 1.1, speed: [6, 9],     alpha: [0.08, 0.18] }, // 중간
-    { density: 6000, len: [28, 52], width: 1.7, speed: [11, 16],   alpha: [0.16, 0.32] }  // 가까운 비 (선명)
-  ];
-
-  function rand(a, b) { return a + Math.random() * (b - a); }
-
-  function resize() {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
-    w = canvas.width = innerWidth * dpr;
-    h = canvas.height = innerHeight * dpr;
-    canvas.style.width = innerWidth + 'px';
-    canvas.style.height = innerHeight + 'px';
-    initAll();
-  }
-
-  function initAll() {
-    // 배경 보케(빛망울) — 깊이감과 감성
-    bokeh = [];
-    const bn = Math.min(14, Math.floor((innerWidth * innerHeight) / 90000));
-    const hues = [200, 205, 190, 215, 38]; // 차가운 블루/틸 + 가끔 따뜻한 앰버
-    for (let i = 0; i < bn; i++) {
-      bokeh.push({
-        x: Math.random() * w, y: Math.random() * h,
-        r: rand(60, 190) * dpr,
-        hue: hues[(Math.random() * hues.length) | 0],
-        a: rand(0.05, 0.13),
-        vx: rand(-0.12, 0.12) * dpr, vy: rand(-0.18, -0.04) * dpr,
-        ph: Math.random() * Math.PI * 2 // 깜빡임 위상
-      });
-    }
-
-    // 원근 빗줄기 레이어
-    layers = LAYER_DEF.map(def => {
-      const count = Math.floor((innerWidth * innerHeight) / def.density);
-      const arr = [];
-      for (let i = 0; i < count; i++) arr.push(newDrop(def, true));
-      return { def, drops: arr };
-    });
-
-    // 유리창에 맺힌 물방울
-    glass = [];
-    const gn = Math.min(26, Math.floor((innerWidth * innerHeight) / 60000));
-    for (let i = 0; i < gn; i++) glass.push(newGlass());
-  }
-
-  function newDrop(def, spread) {
-    return {
-      x: Math.random() * (w + 160 * dpr) - 80 * dpr,
-      y: spread ? Math.random() * h : -rand(20, 120) * dpr,
-      len: rand(def.len[0], def.len[1]) * dpr,
-      speed: rand(def.speed[0], def.speed[1]) * dpr,
-      alpha: rand(def.alpha[0], def.alpha[1])
-    };
-  }
-
-  function newGlass() {
-    return {
-      x: Math.random() * w,
-      y: Math.random() * h,
-      r: rand(2, 6.5) * dpr,
-      vy: 0,
-      sliding: false,
-      wobble: rand(0, Math.PI * 2),
-      delay: rand(0, 400) // 흐르기 시작까지 대기
-    };
-  }
-
-  function draw() {
-    t++;
-
-    // 모션블러 잔상 — 깊은 밤 블루로 서서히 덮기
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = 'rgba(7,11,22,0.16)';
-    ctx.fillRect(0, 0, w, h);
-
-    // 드물고 부드러운 번개
-    if (Math.random() < 0.0016 && flash <= 0) flash = 1;
-    if (flash > 0) {
-      ctx.fillStyle = `rgba(150,185,235,${flash * 0.06})`;
-      ctx.fillRect(0, 0, w, h);
-      flash -= 0.03;
-    }
-
-    // 보케(빛망울) — 부드러운 글로우
-    ctx.globalCompositeOperation = 'lighter';
-    for (const b of bokeh) {
-      b.x += b.vx; b.y += b.vy;
-      if (b.y < -b.r) { b.y = h + b.r; b.x = Math.random() * w; }
-      if (b.x < -b.r) b.x = w + b.r; else if (b.x > w + b.r) b.x = -b.r;
-      const tw = b.a * (0.7 + 0.3 * Math.sin(t * 0.01 + b.ph)); // 은은한 명멸
-      const g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
-      g.addColorStop(0, `hsla(${b.hue},80%,70%,${tw})`);
-      g.addColorStop(1, `hsla(${b.hue},80%,70%,0)`);
-      ctx.fillStyle = g;
-      ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
-    }
-    ctx.globalCompositeOperation = 'source-over';
-
-    // 원근 빗줄기 — 머리쪽이 밝고 꼬리는 잔상으로 흐려짐
-    ctx.lineCap = 'round';
-    const sway = 2.0 * dpr; // 바람에 비스듬히
-    for (const layer of layers) {
-      const wdt = layer.def.width * dpr;
-      for (const d of layer.drops) {
-        const tailX = d.x - sway * (d.len / (30 * dpr));
-        const grad = ctx.createLinearGradient(d.x, d.y, tailX, d.y + d.len);
-        grad.addColorStop(0, `rgba(190,220,255,${d.alpha})`);
-        grad.addColorStop(1, `rgba(150,195,255,0)`);
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = wdt;
-        ctx.beginPath();
-        ctx.moveTo(d.x, d.y);
-        ctx.lineTo(tailX, d.y + d.len);
-        ctx.stroke();
-
-        d.y += d.speed;
-        d.x -= sway * 0.18;
-        if (d.y > h) Object.assign(d, newDrop(layer.def, false));
-      }
-    }
-
-    // 유리창 물방울 — 맺혔다가 또르르 흘러내림
-    for (const dr of glass) {
-      if (dr.delay > 0) { dr.delay--; }
-      else if (!dr.sliding) {
-        // 일정 확률로 흐르기 시작 (큰 방울일수록 잘 흐름)
-        if (Math.random() < 0.002 + dr.r / (4000 * dpr)) dr.sliding = true;
-      } else {
-        dr.vy += 0.06 * dpr;                       // 중력 가속
-        dr.vy = Math.min(dr.vy, 3.2 * dpr);
-        dr.y += dr.vy;
-        dr.wobble += 0.25;
-        dr.x += Math.sin(dr.wobble) * 0.4 * dpr;   // 미세한 좌우 흔들림
-        dr.r *= 0.997;                              // 흐르며 작아짐
-        if (dr.y > h + 10 * dpr || dr.r < 1.2 * dpr) Object.assign(dr, newGlass(), { y: -rand(0, 60) * dpr });
-      }
-      drawGlassDrop(dr);
-    }
-
-    requestAnimationFrame(draw);
-  }
-
-  // 유리에 맺힌 물방울 — 굴절 하이라이트로 입체감
-  function drawGlassDrop(dr) {
-    const { x, y, r } = dr;
-    // 본체(살짝 어둡고 투명한 렌즈)
-    const body = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r);
-    body.addColorStop(0, 'rgba(210,230,255,0.18)');
-    body.addColorStop(0.7, 'rgba(120,160,210,0.10)');
-    body.addColorStop(1, 'rgba(90,130,180,0.02)');
-    ctx.fillStyle = body;
-    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
-    // 작은 반짝임(빛 반사)
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.beginPath(); ctx.arc(x - r * 0.35, y - r * 0.35, r * 0.28, 0, Math.PI * 2); ctx.fill();
-  }
-
-  addEventListener('resize', resize);
-  resize();
-  draw();
-})();
-
-/* =========================================================
-   2) 시계 / 날짜
+   시계 / 날짜
    ========================================================= */
 (function () {
   const elClock = document.getElementById('clock');
@@ -357,7 +164,7 @@
 })();
 
 /* =========================================================
-   3) 날씨 (Open-Meteo · API 키 불필요 · 현재 위치 기준)
+   날씨 (Open-Meteo · API 키 불필요 · 현재 위치 기준)
    ========================================================= */
 (function () {
   const WMO = {
@@ -417,15 +224,15 @@
       const [dico] = wmo(d.weather_code[i]);
       const [ducls] = uvClass(d.uv_index_max[i]);
       const isToday = iso === todayStr;
+      const pop = d.precipitation_probability_max ? d.precipitation_probability_max[i] : null;
       const cell = document.createElement('div');
       cell.className = 'day' + (isToday ? ' today' : '');
-      const pop = d.precipitation_probability_max ? d.precipitation_probability_max[i] : null;
       cell.innerHTML =
         `<div class="dname">${isToday ? '오늘' : dayNames[dt.getDay()]}</div>`
         + `<div class="dico">${dico}</div>`
         + `<div class="dmax">${Math.round(d.temperature_2m_max[i])}°</div>`
         + `<div class="dmin">${Math.round(d.temperature_2m_min[i])}°</div>`
-        + `<div class="dpop">💧 ${pop == null ? '-' : pop}%</div>`
+        + `<div class="dpop">💧${pop == null ? '-' : pop}%</div>`
         + `<div class="duv"><span class="uv ${ducls}">UV ${Math.round(d.uv_index_max[i])}</span></div>`;
       wk.appendChild(cell);
     });
