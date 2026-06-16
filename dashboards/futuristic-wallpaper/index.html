@@ -20,23 +20,11 @@
     background: #05080f;
   }
 
-  /* === 배경: 유튜브 비 영상 (화면 꽉 채우기) === */
+  /* === 배경: 차분한 빗줄기 (캔버스) === */
   #bg {
-    position: fixed; inset: 0; z-index: 0; overflow: hidden;
-    background: #05080f;
-  }
-  #bg iframe {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 100vw; height: 56.25vw;       /* 16:9 비율 유지하며 cover */
-    min-width: 177.78vh; min-height: 100vh;
-    border: 0; pointer-events: none;
-  }
-  #bgVideo {
-    position: absolute; inset: 0;
+    position: fixed; inset: 0; z-index: 0; display: block;
     width: 100%; height: 100%;
-    object-fit: cover;                   /* 화면 꽉 채우기 */
-    pointer-events: none;
+    background: linear-gradient(180deg, #0b1528 0%, #070c18 55%, #04060d 100%);
   }
   /* 위젯 가독성을 위한 모서리 스크림 */
   .scrim {
@@ -123,7 +111,7 @@
 </style>
 </head>
 <body>
-  <div id="bg"></div>
+  <canvas id="bg"></canvas>
   <div class="scrim"></div>
 
   <!-- 좌측 상단: 시계 + 현재 날씨 -->
@@ -147,41 +135,76 @@
 
 <script>
 /* =========================================================
-   배경: 로컬 영상(assets/rain.mp4) 우선, 없으면 유튜브로 폴백
+   배경: 차분한 빗줄기 (Lively "Rain" 느낌, 캔버스)
    ========================================================= */
 (function () {
-  const bg = document.getElementById('bg');
-  const LOCAL = 'assets/rain.mp4';
-  const YT = 'https://www.youtube.com/embed/mSJ02KRkTYs'
-    + '?autoplay=1&mute=1&controls=0&loop=1&playlist=mSJ02KRkTYs'
-    + '&modestbranding=1&playsinline=1&disablekb=1&fs=0&rel=0&iv_load_policy=3&start=3';
+  const canvas = document.getElementById('bg');
+  const ctx = canvas.getContext('2d');
+  let w, h, dpr, layers;
 
-  function useYouTube() {
-    bg.innerHTML = '';
-    const f = document.createElement('iframe');
-    f.src = YT;
-    f.allow = 'autoplay; encrypted-media';
-    f.allowFullscreen = true;
-    f.referrerPolicy = 'strict-origin-when-cross-origin';
-    bg.appendChild(f);
+  // 원근 2.5겹: 멀수록 가늘고 흐리고 느림
+  const DEF = [
+    { density: 9000, len: [10, 18], width: 0.8, speed: [4, 6],   alpha: [0.05, 0.12] },
+    { density: 7000, len: [16, 30], width: 1.2, speed: [7, 10],  alpha: [0.10, 0.20] },
+    { density: 9000, len: [26, 46], width: 1.6, speed: [11, 15], alpha: [0.16, 0.30] }
+  ];
+  const SWAY = 1.6; // 바람에 비스듬히 기우는 정도
+
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = canvas.width = innerWidth * dpr;
+    h = canvas.height = innerHeight * dpr;
+    canvas.style.width = innerWidth + 'px';
+    canvas.style.height = innerHeight + 'px';
+    layers = DEF.map(def => {
+      const count = Math.floor((innerWidth * innerHeight) / def.density);
+      const drops = [];
+      for (let i = 0; i < count; i++) drops.push(newDrop(def, true));
+      return { def, drops };
+    });
   }
 
-  function useLocal() {
-    const v = document.createElement('video');
-    v.id = 'bgVideo';
-    v.src = LOCAL;
-    v.autoplay = true; v.loop = true; v.muted = true;
-    v.playsInline = true; v.preload = 'auto';
-    v.addEventListener('error', useYouTube);   // 파일 없으면 유튜브로
-    bg.appendChild(v);
-    const p = v.play();
-    if (p && p.catch) p.catch(useYouTube);
+  function newDrop(def, spread) {
+    return {
+      x: Math.random() * (w + 140 * dpr) - 70 * dpr,
+      y: spread ? Math.random() * h : -rand(20, 120) * dpr,
+      len: rand(def.len[0], def.len[1]) * dpr,
+      speed: rand(def.speed[0], def.speed[1]) * dpr,
+      alpha: rand(def.alpha[0], def.alpha[1])
+    };
   }
 
-  // 로컬 파일 존재 여부 확인 후 결정
-  fetch(LOCAL, { method: 'HEAD' })
-    .then(r => (r.ok ? useLocal() : useYouTube()))
-    .catch(useYouTube);
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    ctx.lineCap = 'round';
+    const sway = SWAY * dpr;
+    for (const layer of layers) {
+      const wdt = layer.def.width * dpr;
+      for (const d of layer.drops) {
+        const tailX = d.x - sway;
+        const grad = ctx.createLinearGradient(d.x, d.y, tailX, d.y + d.len);
+        grad.addColorStop(0, `rgba(200,224,255,${d.alpha})`);
+        grad.addColorStop(1, 'rgba(170,205,255,0)');
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = wdt;
+        ctx.beginPath();
+        ctx.moveTo(d.x, d.y);
+        ctx.lineTo(tailX, d.y + d.len);
+        ctx.stroke();
+
+        d.y += d.speed;
+        d.x -= sway * 0.12;
+        if (d.y > h) Object.assign(d, newDrop(layer.def, false));
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+
+  addEventListener('resize', resize);
+  resize();
+  draw();
 })();
 
 /* =========================================================
