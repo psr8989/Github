@@ -32,6 +32,12 @@
     min-width: 177.78vh; min-height: 100vh;
     border: 0; pointer-events: none;
   }
+  #bgVideo {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;                   /* 화면 꽉 채우기 */
+    pointer-events: none;
+  }
   /* 위젯 가독성을 위한 모서리 스크림 */
   .scrim {
     position: fixed; inset: 0; z-index: 1; pointer-events: none;
@@ -117,11 +123,7 @@
 </style>
 </head>
 <body>
-  <div id="bg">
-    <iframe
-      src="https://www.youtube.com/embed/mSJ02KRkTYs?autoplay=1&mute=1&controls=0&loop=1&playlist=mSJ02KRkTYs&modestbranding=1&playsinline=1&disablekb=1&fs=0&rel=0&iv_load_policy=3&start=3"
-      allow="autoplay; encrypted-media" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
-  </div>
+  <div id="bg"></div>
   <div class="scrim"></div>
 
   <!-- 좌측 상단: 시계 + 현재 날씨 -->
@@ -144,6 +146,44 @@
   </div>
 
 <script>
+/* =========================================================
+   배경: 로컬 영상(assets/rain.mp4) 우선, 없으면 유튜브로 폴백
+   ========================================================= */
+(function () {
+  const bg = document.getElementById('bg');
+  const LOCAL = 'assets/rain.mp4';
+  const YT = 'https://www.youtube.com/embed/mSJ02KRkTYs'
+    + '?autoplay=1&mute=1&controls=0&loop=1&playlist=mSJ02KRkTYs'
+    + '&modestbranding=1&playsinline=1&disablekb=1&fs=0&rel=0&iv_load_policy=3&start=3';
+
+  function useYouTube() {
+    bg.innerHTML = '';
+    const f = document.createElement('iframe');
+    f.src = YT;
+    f.allow = 'autoplay; encrypted-media';
+    f.allowFullscreen = true;
+    f.referrerPolicy = 'strict-origin-when-cross-origin';
+    bg.appendChild(f);
+  }
+
+  function useLocal() {
+    const v = document.createElement('video');
+    v.id = 'bgVideo';
+    v.src = LOCAL;
+    v.autoplay = true; v.loop = true; v.muted = true;
+    v.playsInline = true; v.preload = 'auto';
+    v.addEventListener('error', useYouTube);   // 파일 없으면 유튜브로
+    bg.appendChild(v);
+    const p = v.play();
+    if (p && p.catch) p.catch(useYouTube);
+  }
+
+  // 로컬 파일 존재 여부 확인 후 결정
+  fetch(LOCAL, { method: 'HEAD' })
+    .then(r => (r.ok ? useLocal() : useYouTube()))
+    .catch(useYouTube);
+})();
+
 /* =========================================================
    시계 / 날짜
    ========================================================= */
