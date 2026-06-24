@@ -191,7 +191,8 @@
         <button class="key" data-num="3">3</button>
         <button class="key op" data-op="+">+</button>
 
-        <button class="key zero" data-num="0">0</button>
+        <button class="key fn" data-action="backspace">⌫</button>
+        <button class="key" data-num="0">0</button>
         <button class="key" data-num=".">.</button>
         <button class="key equals" data-action="equals">=</button>
       </div>
@@ -325,10 +326,11 @@
     if (btn.dataset.num !== undefined) inputNum(btn.dataset.num);
     else if (btn.dataset.op !== undefined) chooseOp(btn.dataset.op);
     else switch (btn.dataset.action) {
-      case 'clear':   clearAll();  break;
-      case 'sign':    toggleSign(); break;
-      case 'percent': percent();   break;
-      case 'equals':  equals();    break;
+      case 'clear':     clearAll();   break;
+      case 'backspace': backspace();  break;
+      case 'sign':      toggleSign(); break;
+      case 'percent':   percent();    break;
+      case 'equals':    equals();     break;
     }
   }
 
