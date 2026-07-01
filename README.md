@@ -11,6 +11,22 @@ GitHub Pages를 통해 배포된 인터랙티브 대시보드 목록입니다.
 
 ## 🗂️ 대시보드 목록
 
+### 0. 🗓️ 달력 할 일 (CalendarTask)
+
+> 월간 달력 + 할 일 관리 — 브라우저 로컬 저장, 오프라인 동작, 휴대폰에 앱으로 설치(PWA) 가능
+
+**👉 [https://psr8989.github.io/Github/dashboards/calendar-task/](https://psr8989.github.io/Github/dashboards/calendar-task/)**
+
+| 항목 | 내용 |
+|------|------|
+| **달력** | 월간 보기, 이전/다음 달·오늘 이동, 날짜별 할 일 점(우선순위·완료) 표시 |
+| **할 일** | 추가·완료 체크·삭제, 우선순위(높음/보통/낮음), 완료/우선순위 자동 정렬 |
+| **저장** | 브라우저 localStorage (서버 불필요), JSON 내보내기/가져오기로 백업·기기 이전 |
+| **앱** | PWA — 휴대폰 홈 화면에 설치, 오프라인에서도 실행 |
+| **동기화** | 현재는 JSON 파일로 수동 이전. 실시간 기기 간 동기화는 추후 클라우드 연동 예정 |
+
+---
+
 ### 1. 🌌 미래형 라이브 배경 & 날씨 대시보드
 
 > 움직이는 네온 파티클 배경 위에 시계 · 이번 주 날씨 · 온도 · 자외선 지수를 표시하는 인터랙티브 바탕화면
@@ -84,6 +100,8 @@ GitHub Pages를 통해 배포된 인터랙티브 대시보드 목록입니다.
 Github/
 ├── index.html                  ← 랜딩 페이지 (대시보드 포털)
 ├── dashboards/
+│   ├── calendar-task/
+│   │   └── index.html          ← 달력 할 일 앱 (PWA, manifest.json·sw.js·icon.svg 포함)
 │   ├── futuristic-wallpaper/
 │   │   └── index.html          ← 미래형 라이브 배경 & 날씨 대시보드
 │   ├── campaign-dashboard/
