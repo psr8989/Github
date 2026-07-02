@@ -3,408 +3,1783 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0b1220">
+<meta name="theme-color" content="#f8fafc">
 <title>달력 할 일 · CalendarTask</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="할 일">
 <style>
   :root {
-    --text: #f2f4f8;
-    --muted: #aeb6c4;
-    --line: rgba(255,255,255,.14);
-    --cell: rgba(20,26,38,.42);
-    --cell-hover: rgba(40,50,70,.55);
-    --head: rgba(12,17,28,.66);
-    --red: #ff5a52;
-    --weekend: rgba(232,120,40,.30);
-    --weekend-line: rgba(232,140,60,.45);
-    --today: #ff5a52;
-    --accent: #d4af37;
+    --bg: #f6f8fb;
+    --panel: #ffffff;
+    --panel-strong: #f0f4f8;
+    --text: #172033;
+    --muted: #657083;
+    --line: #d8dee9;
+    --line-strong: #c3cad7;
+    --accent: #0f766e;
+    --accent-soft: #dff6f2;
+    --danger: #d94841;
+    --danger-soft: #fee7e5;
+    --warning: #b7791f;
+    --warning-soft: #fff3cd;
+    --today: #2563eb;
+    --today-soft: #e7efff;
+    --done: #64748b;
+    --sun: #c2413a;
+    --sat: #2563eb;
+    --weekend: #fff8ee;
+    --shadow: 0 18px 50px rgba(23, 32, 51, .18);
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; overflow: hidden; }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
-    font-family: -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+    margin: 0;
+    overflow: hidden;
     color: var(--text);
-    display: flex; flex-direction: column;
-    /* Windows 11 'Bloom' 풍 배경 */
-    background:
-      radial-gradient(1200px 800px at 75% 30%, rgba(60,120,230,.55), transparent 60%),
-      radial-gradient(900px 700px at 30% 80%, rgba(20,60,160,.55), transparent 60%),
-      radial-gradient(700px 600px at 60% 55%, rgba(120,80,220,.30), transparent 60%),
-      linear-gradient(135deg, #0a1020 0%, #0d1730 45%, #102a55 100%);
-    background-attachment: fixed;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", sans-serif;
+    background: linear-gradient(180deg, #fbfcfe 0%, var(--bg) 52%, #eef3f7 100%);
+    display: flex;
+    flex-direction: column;
+  }
+  button, input {
+    font: inherit;
+  }
+  button {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
-  /* ---- 상단 바 ---- */
   .topbar {
-    position: relative; flex: none;
-    display: flex; align-items: center;
-    height: 38px; padding: 0 .6rem; padding-top: var(--safe-top);
-    background: var(--head); border-bottom: 1px solid var(--line);
-    backdrop-filter: blur(10px);
+    flex: none;
+    min-height: calc(56px + var(--safe-top));
+    padding: calc(.55rem + var(--safe-top)) .85rem .55rem;
+    display: grid;
+    grid-template-columns: auto minmax(220px, 1fr) auto;
+    align-items: center;
+    gap: .75rem;
+    background: rgba(255, 255, 255, .92);
+    border-bottom: 1px solid var(--line);
+    backdrop-filter: blur(12px);
   }
-  .topbar .title {
-    position: absolute; left: 0; right: 0; text-align: center;
-    font-size: .92rem; font-weight: 600; letter-spacing: .01em; pointer-events: none;
+  .topbar a {
+    text-decoration: none;
   }
-  .topbar .left { display: flex; gap: .15rem; }
-  .topbar .right { margin-left: auto; display: flex; gap: .1rem; }
-  .tb-btn {
-    background: transparent; border: none; color: var(--text);
-    width: 34px; height: 30px; border-radius: 7px; font-size: 1rem;
-    display: grid; place-items: center; opacity: .85; transition: background .12s, opacity .12s;
+  .icon-btn {
+    width: 38px;
+    height: 38px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    display: inline-grid;
+    place-items: center;
+    background: transparent;
+    color: var(--text);
+    font-size: 1rem;
+    transition: background .14s, border-color .14s, transform .14s;
   }
-  .tb-btn:hover { background: rgba(255,255,255,.12); opacity: 1; }
+  .icon-btn:hover,
+  .icon-btn:focus-visible {
+    background: var(--panel-strong);
+    border-color: var(--line);
+    outline: none;
+  }
+  .icon-btn:active {
+    transform: translateY(1px);
+  }
+  .month-nav {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 38px minmax(0, max-content) 38px;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+  }
+  .month-title {
+    min-width: 180px;
+    text-align: center;
+  }
+  .month-title strong {
+    display: block;
+    font-size: 1.05rem;
+    line-height: 1.1;
+  }
+  .month-title span {
+    display: block;
+    margin-top: .16rem;
+    color: var(--muted);
+    font-size: .78rem;
+    white-space: nowrap;
+  }
+  .actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: .15rem;
+  }
 
-  /* ---- 요일 헤더 ---- */
+  .quickbar {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    padding: .55rem .85rem;
+    background: rgba(248, 250, 252, .94);
+    border-bottom: 1px solid var(--line);
+  }
+  .search-box {
+    flex: 1;
+    min-width: 140px;
+    max-width: 520px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    padding: 0 .7rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--muted);
+  }
+  .search-box input {
+    min-width: 0;
+    flex: 1;
+    border: 0;
+    outline: 0;
+    color: var(--text);
+    background: transparent;
+  }
+  .search-box:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, .14);
+  }
+  .pill {
+    height: 38px;
+    padding: 0 .85rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--text);
+    white-space: nowrap;
+    font-size: .9rem;
+    font-weight: 650;
+  }
+  .pill:hover,
+  .pill:focus-visible {
+    border-color: var(--line-strong);
+    background: var(--panel-strong);
+    outline: none;
+  }
+  .pill[aria-pressed="true"] {
+    color: var(--accent);
+    border-color: rgba(15, 118, 110, .35);
+    background: var(--accent-soft);
+  }
+  .pill.primary {
+    color: #fff;
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+  .pill.primary:hover,
+  .pill.primary:focus-visible {
+    background: #0d665f;
+  }
+
   .weekdays {
-    flex: none; display: grid; grid-template-columns: repeat(7, 1fr);
-    background: var(--head); border-bottom: 1px solid var(--line);
+    flex: none;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
   }
   .weekdays span {
-    text-align: center; font-size: .8rem; font-weight: 600; color: var(--muted);
-    padding: .35rem 0; border-left: 1px solid var(--line);
+    min-width: 0;
+    padding: .42rem .25rem;
+    text-align: center;
+    color: var(--muted);
+    border-left: 1px solid var(--line);
+    font-size: .8rem;
+    font-weight: 700;
   }
-  .weekdays span:first-child { border-left: none; color: #ff8a82; }
-  .weekdays span:last-child { color: #7fb2ff; }
+  .weekdays span:first-child {
+    border-left: 0;
+    color: var(--sun);
+  }
+  .weekdays span:last-child {
+    color: var(--sat);
+  }
 
-  /* ---- 달력 본체 ---- */
-  .grid { flex: 1; display: grid; grid-template-columns: repeat(7, 1fr); min-height: 0; }
+  .grid {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
   .cell {
-    border-left: 1px solid var(--line); border-top: 1px solid var(--line);
-    background: var(--cell); padding: .25rem .4rem .3rem; overflow: hidden;
-    display: flex; flex-direction: column; min-height: 0; position: relative;
-    transition: background .12s; cursor: pointer;
+    appearance: none;
+    border: 0;
+    border-left: 1px solid var(--line);
+    border-top: 1px solid var(--line);
+    padding: .42rem .48rem .5rem;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .32rem;
+    position: relative;
+    overflow: hidden;
+    color: var(--text);
+    background: rgba(255, 255, 255, .82);
+    text-align: left;
+    transition: background .14s, box-shadow .14s, opacity .14s;
   }
-  .cell:nth-child(7n+1) { border-left: none; }
-  .cell:hover { background: var(--cell-hover); }
-  .cell.wknd { background: linear-gradient(var(--weekend), var(--weekend)), var(--cell); }
-  .cell.wknd:hover { background: linear-gradient(var(--weekend), var(--weekend)), var(--cell-hover); }
-  .cell.other { opacity: .42; }
-  .cell.today { box-shadow: inset 0 0 0 2px var(--today); border-radius: 2px; }
-
-  .cell .num { font-size: .82rem; font-weight: 700; color: var(--text); margin-bottom: .12rem; flex: none; }
-  .cell.sun .num { color: #ff8a82; }
-  .cell.sat .num { color: #7fb2ff; }
-  .cell .num .lbl { font-size: .68rem; font-weight: 600; color: var(--red); margin-left: .25rem; }
-
-  .cell .items { flex: 1; overflow-y: auto; overflow-x: hidden; }
-  .cell .items::-webkit-scrollbar { width: 0; }
+  .cell:nth-child(7n+1) {
+    border-left: 0;
+  }
+  .cell:hover,
+  .cell:focus-visible {
+    background: #fff;
+    box-shadow: inset 0 0 0 2px rgba(15, 118, 110, .28);
+    outline: none;
+  }
+  .cell.wknd {
+    background: var(--weekend);
+  }
+  .cell.other {
+    background: #eef2f7;
+    color: var(--muted);
+  }
+  .cell.today {
+    box-shadow: inset 0 0 0 2px var(--today);
+  }
+  .cell.selected {
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+  .cell.filtered {
+    opacity: .46;
+  }
+  .cell-head {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .35rem;
+    min-width: 0;
+  }
+  .day-num {
+    font-weight: 800;
+    font-size: .86rem;
+  }
+  .sun .day-num {
+    color: var(--sun);
+  }
+  .sat .day-num {
+    color: var(--sat);
+  }
+  .today-tag {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 .4rem;
+    border-radius: 999px;
+    color: var(--today);
+    background: var(--today-soft);
+    font-size: .68rem;
+    font-weight: 800;
+  }
+  .day-badges {
+    flex: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .22rem;
+    min-height: 21px;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding: 0 .38rem;
+    border-radius: 999px;
+    background: var(--panel-strong);
+    color: var(--muted);
+    font-size: .68rem;
+    font-weight: 750;
+  }
+  .badge.pending {
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .badge.important {
+    color: var(--danger);
+    background: var(--danger-soft);
+  }
+  .badge.done {
+    color: var(--done);
+  }
+  .items {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+  }
   .item {
-    font-size: .78rem; line-height: 1.45; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    min-height: 20px;
+    display: flex;
+    align-items: center;
+    gap: .28rem;
+    padding: .08rem .18rem;
+    border-radius: 5px;
+    color: var(--text);
+    font-size: .76rem;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .item::before {
+    content: "";
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .item.imp {
+    color: var(--danger);
+    background: rgba(217, 72, 65, .08);
+  }
+  .item.imp::before {
+    background: var(--danger);
+  }
+  .item.done {
+    color: var(--done);
+    text-decoration: line-through;
+    opacity: .72;
+  }
+  .more {
+    color: var(--muted);
+    font-size: .7rem;
+    font-weight: 700;
+  }
+
+  .overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(15, 23, 42, .38);
+    backdrop-filter: blur(4px);
+  }
+  .overlay.show {
+    display: flex;
+  }
+  .editor {
+    width: min(520px, 100%);
+    max-height: min(86vh, 720px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--panel);
+    box-shadow: var(--shadow);
+  }
+  .ed-head {
+    flex: none;
+    display: grid;
+    grid-template-columns: 38px 1fr 38px 38px;
+    align-items: center;
+    gap: .35rem;
+    padding: .85rem .9rem .65rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .ed-title {
+    min-width: 0;
+    text-align: center;
+  }
+  .ed-date {
+    display: block;
+    font-size: 1.04rem;
+    font-weight: 800;
+  }
+  .ed-sub {
+    display: block;
+    margin-top: .15rem;
+    color: var(--muted);
+    font-size: .78rem;
+  }
+  .ed-list {
+    flex: 1;
+    min-height: 100px;
+    overflow-y: auto;
+    margin: 0;
+    padding: .45rem .65rem;
+    list-style: none;
+  }
+  .ed-item {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) 32px 32px 32px;
+    align-items: center;
+    gap: .35rem;
+    padding: .38rem .25rem;
+    border-radius: 8px;
+  }
+  .ed-item:hover,
+  .ed-item:focus-within {
+    background: var(--panel-strong);
+  }
+  .ed-item.editing {
+    grid-template-columns: 32px minmax(0, 1fr) 42px 42px;
+    background: var(--panel-strong);
+  }
+  .ed-action {
+    width: 32px;
+    height: 32px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    display: inline-grid;
+    place-items: center;
+    background: transparent;
+    color: var(--muted);
+  }
+  .ed-action:hover,
+  .ed-action:focus-visible {
+    color: var(--text);
+    border-color: var(--line);
+    background: #fff;
+    outline: none;
+  }
+  .ed-action.chk {
+    border-color: var(--line-strong);
+    color: transparent;
+  }
+  .ed-item.done .ed-action.chk {
+    color: #fff;
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+  .ed-action.star.on {
+    color: var(--danger);
+    background: var(--danger-soft);
+  }
+  .ed-action.del:hover,
+  .ed-action.del:focus-visible {
+    color: var(--danger);
+  }
+  .ed-text {
+    min-width: 0;
+    color: var(--text);
+    font-size: .94rem;
+    line-height: 1.45;
+    word-break: break-word;
+  }
+  .ed-item.imp .ed-text {
+    color: var(--danger);
+    font-weight: 700;
+  }
+  .ed-item.done .ed-text {
+    color: var(--done);
+    text-decoration: line-through;
+    font-weight: 500;
+  }
+  .edit-input {
+    width: 100%;
+    height: 36px;
+    min-width: 0;
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 0 .65rem;
+    color: var(--text);
+    outline: none;
+  }
+  .edit-save,
+  .edit-cancel {
+    height: 32px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--text);
+    font-weight: 750;
+  }
+  .edit-save {
+    color: #fff;
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+  .ed-empty {
+    padding: 2rem 1rem;
+    color: var(--muted);
+    text-align: center;
+    font-size: .9rem;
+  }
+  .ed-tools {
+    flex: none;
+    min-height: 45px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: .35rem .9rem;
+    border-top: 1px solid var(--line);
+  }
+  .text-btn {
+    height: 32px;
+    padding: 0 .7rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--muted);
+    font-size: .82rem;
+    font-weight: 700;
+  }
+  .text-btn:hover,
+  .text-btn:focus-visible {
+    color: var(--danger);
+    border-color: rgba(217, 72, 65, .35);
+    background: var(--danger-soft);
+    outline: none;
+  }
+  .text-btn[hidden] {
+    display: none;
+  }
+  .ed-add {
+    flex: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px 48px;
+    gap: .45rem;
+    padding: .7rem .9rem calc(.7rem + var(--safe-bottom));
+    border-top: 1px solid var(--line);
+    background: #fbfcfe;
+  }
+  .ed-add input {
+    min-width: 0;
+    height: 42px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0 .75rem;
+    color: var(--text);
+    background: #fff;
+    outline: none;
+  }
+  .ed-add input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, .14);
+  }
+  .imp-toggle {
+    width: 44px;
+    height: 42px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--muted);
+    font-size: 1rem;
+  }
+  .imp-toggle.on,
+  .imp-toggle[aria-pressed="true"] {
+    color: var(--danger);
+    border-color: rgba(217, 72, 65, .38);
+    background: var(--danger-soft);
+  }
+  .add-btn {
+    height: 42px;
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 800;
+  }
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(1.2rem + var(--safe-bottom));
+    z-index: 60;
+    min-width: 180px;
+    max-width: calc(100vw - 2rem);
+    transform: translateX(-50%) translateY(18px);
+    opacity: 0;
+    pointer-events: none;
+    padding: .72rem .95rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(23, 32, 51, .94);
+    color: #fff;
+    font-size: .86rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+    transition: opacity .2s, transform .2s;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  @media (max-width: 760px) {
+    .topbar {
+      grid-template-columns: auto 1fr auto;
+      gap: .45rem;
+      padding-left: .55rem;
+      padding-right: .55rem;
+    }
+    .month-title {
+      min-width: 132px;
+    }
+    .month-title strong {
+      font-size: .95rem;
+    }
+    .month-title span {
+      display: none;
+    }
+    .actions .icon-btn {
+      width: 34px;
+    }
+    .quickbar {
+      gap: .4rem;
+      padding: .45rem .55rem;
+    }
+    .pill {
+      padding: 0 .62rem;
+      font-size: .82rem;
+    }
+    .search-box {
+      height: 36px;
+      padding: 0 .55rem;
+    }
+    .weekdays span {
+      font-size: 0;
+      padding: .35rem 0;
+    }
+    .weekdays span::after {
+      content: attr(data-short);
+      font-size: .78rem;
+    }
+    .cell {
+      padding: .34rem .28rem .36rem;
+      gap: .22rem;
+    }
+    .day-num {
+      font-size: .78rem;
+    }
+    .today-tag {
+      width: 8px;
+      height: 8px;
+      padding: 0;
+      overflow: hidden;
+      color: transparent;
+    }
+    .badge {
+      height: 18px;
+      padding: 0 .28rem;
+      font-size: .62rem;
+    }
+    .item {
+      min-height: 18px;
+      font-size: .66rem;
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .topbar {
+      grid-template-columns: auto 1fr auto;
+    }
+    .month-nav {
+      grid-template-columns: 30px minmax(0, 1fr) 30px;
+      gap: .1rem;
+    }
+    .month-title {
+      min-width: 110px;
+    }
+    .icon-btn {
+      width: 32px;
+      height: 34px;
+    }
+    .actions {
+      gap: 0;
+    }
+    .quickbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+    }
+    .search-box {
+      min-width: 0;
+    }
+    .pill {
+      height: 36px;
+    }
+    .cell {
+      padding: .28rem .22rem;
+    }
+    .day-badges {
+      min-height: 0;
+    }
+    .badge.done {
+      display: none;
+    }
+    .items {
+      gap: .08rem;
+    }
+    .item {
+      font-size: .62rem;
+    }
+    .editor {
+      max-height: 92vh;
+      border-radius: 10px;
+    }
+    .ed-head {
+      grid-template-columns: 34px 1fr 34px 34px;
+      padding: .7rem .65rem .55rem;
+    }
+    .ed-list {
+      padding: .35rem .45rem;
+    }
+    .ed-item {
+      grid-template-columns: 32px minmax(0, 1fr) 32px 32px;
+      gap: .22rem;
+    }
+    .ed-item .edit {
+      display: none;
+    }
+    .ed-item.editing {
+      grid-template-columns: minmax(0, 1fr) 40px 40px;
+    }
+    .ed-item.editing .ed-action.chk {
+      display: none;
+    }
+    .ed-add {
+      grid-template-columns: minmax(0, 1fr) 42px 46px;
+      padding-left: .65rem;
+      padding-right: .65rem;
+    }
+  }
+  /* Desktop widget surface */
+  body {
+    background:
+      radial-gradient(900px 640px at 58% 52%, rgba(0, 130, 255, .55), transparent 54%),
+      radial-gradient(760px 540px at 43% 72%, rgba(0, 77, 205, .62), transparent 58%),
+      radial-gradient(620px 420px at 61% 82%, rgba(0, 31, 115, .72), transparent 62%),
+      linear-gradient(135deg, #b9d4e4 0%, #c6dce9 42%, #9dbbd0 100%);
+    background-position: center;
+    background-size: cover;
+  }
+  body.has-wallpaper {
+    background-image:
+      linear-gradient(90deg, rgba(255, 255, 255, .04), rgba(255, 255, 255, .04)),
+      var(--wallpaper-image);
+  }
+  .desktop-stage {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: clamp(8px, 1.6vw, 28px);
+  }
+  .widget {
+    position: relative;
+    width: min(1180px, 64vw);
+    min-width: 720px;
+    height: min(760px, calc(100vh - 2rem));
+    min-height: 520px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: var(--text);
+    background: var(--widget-bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, .25);
+    backdrop-filter: blur(8px) saturate(1.1);
+  }
+  .topbar {
+    min-height: calc(36px + var(--safe-top));
+    padding: calc(.22rem + var(--safe-top)) .55rem .22rem;
+    background: var(--bar-bg);
+    border-bottom-color: var(--line);
+  }
+  .month-title strong {
+    color: var(--text);
+    font-size: .9rem;
+  }
+  .month-title span {
+    color: var(--muted);
+    font-size: .72rem;
+  }
+  .icon-btn {
     color: var(--text);
   }
-  .item::before { content: "• "; color: var(--muted); }
-  .item.imp { color: var(--red); }
-  .item.imp::before { color: var(--red); }
-  .item.done { color: var(--muted); text-decoration: line-through; opacity: .65; }
-
-  /* ---- 날짜 편집 팝업 ---- */
-  .overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,.45); backdrop-filter: blur(2px);
-    display: none; align-items: center; justify-content: center; z-index: 40; padding: 1rem;
+  .icon-btn:hover,
+  .icon-btn:focus-visible {
+    background: rgba(255, 255, 255, .12);
+    border-color: var(--line);
   }
-  .overlay.show { display: flex; }
-  .editor {
-    width: 100%; max-width: 420px; max-height: 80vh; display: flex; flex-direction: column;
-    background: rgba(18,24,38,.96); border: 1px solid var(--line); border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0,0,0,.5); overflow: hidden;
+  .quickbar {
+    padding: .42rem .55rem;
+    background: var(--tool-bg);
+    border-bottom-color: var(--line);
   }
-  .ed-head { padding: 1rem 1.1rem .6rem; display: flex; align-items: baseline; gap: .5rem; }
-  .ed-date { font-size: 1.15rem; font-weight: 700; }
-  .ed-sub { font-size: .78rem; color: var(--muted); margin-left: auto; }
-  .ed-list { list-style: none; overflow-y: auto; padding: 0 .6rem; flex: 1; min-height: 40px; }
-  .ed-item { display: flex; align-items: center; gap: .55rem; padding: .5rem .45rem; border-radius: 9px; }
-  .ed-item:hover { background: rgba(255,255,255,.06); }
-  .ed-item .chk {
-    flex: none; width: 19px; height: 19px; border-radius: 6px; border: 2px solid var(--muted);
-    display: grid; place-items: center; font-size: .7rem; color: #0c1a13; transition: .12s; cursor: pointer;
+  .search-box,
+  .pill,
+  .text-btn,
+  .edit-save,
+  .edit-cancel,
+  .ed-action:hover,
+  .ed-action:focus-visible {
+    background: rgba(255, 255, 255, .08);
+    border-color: var(--line);
+    color: var(--text);
   }
-  .ed-item.done .chk { background: #4cae7e; border-color: #4cae7e; }
-  .ed-item .txt { flex: 1; font-size: .92rem; word-break: break-word; cursor: pointer; }
-  .ed-item.imp .txt { color: var(--red); }
-  .ed-item.done .txt { text-decoration: line-through; color: var(--muted); }
-  .ed-item .star, .ed-item .del {
-    flex: none; background: none; border: none; color: var(--muted); font-size: .95rem; opacity: .6; padding: .1rem .2rem;
+  .search-box input {
+    color: var(--text);
   }
-  .ed-item .star.on { color: var(--red); opacity: 1; }
-  .ed-item .star:hover, .ed-item .del:hover { opacity: 1; }
-  .ed-item .del:hover { color: var(--red); }
-  .ed-empty { color: var(--muted); font-size: .85rem; text-align: center; padding: 1.2rem; }
-
-  .ed-add { display: flex; gap: .5rem; padding: .7rem 1.1rem; border-top: 1px solid var(--line); }
-  .ed-add input {
-    flex: 1; background: rgba(0,0,0,.3); border: 1px solid var(--line); color: var(--text);
-    border-radius: 9px; padding: .6rem .7rem; font-size: .92rem; outline: none;
+  .search-box input::placeholder {
+    color: var(--muted);
   }
-  .ed-add input:focus { border-color: var(--accent); }
-  .ed-add .impToggle {
-    flex: none; background: rgba(0,0,0,.3); border: 1px solid var(--line); color: var(--muted);
-    border-radius: 9px; width: 42px; font-size: 1.05rem;
+  .pill.primary,
+  .add-btn,
+  .edit-save {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-contrast);
   }
-  .ed-add .impToggle.on { color: var(--red); border-color: var(--red); }
-  .ed-add .go {
-    flex: none; background: var(--accent); color: #1a1400; border: none; border-radius: 9px;
-    width: 44px; font-size: 1.4rem; font-weight: 700;
+  .pill[aria-pressed="true"] {
+    background: var(--accent-soft);
+    color: var(--text);
   }
-
-  .toast {
-    position: fixed; left: 50%; bottom: calc(1.5rem + var(--safe-bottom)); transform: translateX(-50%) translateY(20px);
-    background: rgba(30,38,56,.96); border: 1px solid var(--line); color: var(--text);
-    padding: .6rem 1rem; border-radius: 10px; font-size: .85rem; opacity: 0; pointer-events: none;
-    transition: .25s; z-index: 60; box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  .weekdays {
+    background: var(--bar-bg);
+    border-bottom-color: var(--line);
   }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  @media (max-width: 640px) {
-    .weekdays span { font-size: 0; }
-    .weekdays span::first-letter { font-size: .8rem; }
-    .weekdays span { padding: .3rem 0; }
-    .weekdays span::after { content: attr(data-short); font-size: .78rem; font-weight: 600; }
-    .cell .num { font-size: .74rem; }
-    .item { font-size: .68rem; }
+  .weekdays span {
+    color: var(--text);
+    border-left-color: var(--line);
+  }
+  .weekdays span:first-child,
+  .weekdays span:last-child {
+    color: var(--text);
+  }
+  .cell {
+    background: var(--cell-bg);
+    border-left-color: var(--line);
+    border-top-color: var(--line);
+    color: var(--text);
+  }
+  .cell:hover,
+  .cell:focus-visible {
+    background: var(--cell-hover);
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+  .cell.wknd,
+  .cell.wknd:hover,
+  .cell.wknd:focus-visible {
+    background: var(--weekend-bg);
+  }
+  .cell.other {
+    background: var(--other-bg);
+    color: var(--muted);
+  }
+  .cell.today {
+    box-shadow: inset 0 0 0 2px var(--today);
+  }
+  .cell.selected {
+    box-shadow: inset 0 0 0 2px var(--accent);
+  }
+  .sun .day-num,
+  .sat .day-num,
+  .day-num,
+  .item {
+    color: var(--text);
+  }
+  .today-tag,
+  .badge.pending {
+    color: var(--text);
+    background: var(--accent-soft);
+  }
+  .badge,
+  .badge.done {
+    color: var(--muted);
+    background: rgba(255, 255, 255, .1);
+  }
+  .badge.important,
+  .item.imp,
+  .ed-item.imp .ed-text {
+    color: var(--danger);
+  }
+  .item.imp {
+    background: var(--danger-soft);
+  }
+  .item.done,
+  .ed-item.done .ed-text {
+    color: var(--done);
+  }
+  .editor,
+  .ed-add {
+    background: var(--modal-bg);
+    color: var(--text);
+  }
+  .ed-head,
+  .ed-tools,
+  .ed-add {
+    border-color: var(--line);
+  }
+  .ed-sub,
+  .ed-empty,
+  .ed-action,
+  .more {
+    color: var(--muted);
+  }
+  .ed-item:hover,
+  .ed-item:focus-within,
+  .ed-item.editing {
+    background: rgba(255, 255, 255, .08);
+  }
+  .ed-add input,
+  .edit-input {
+    background: rgba(255, 255, 255, .1);
+    border-color: var(--line);
+    color: var(--text);
+  }
+  .settings-panel {
+    position: absolute;
+    top: calc(44px + var(--safe-top));
+    right: .65rem;
+    z-index: 30;
+    width: min(330px, calc(100% - 1.3rem));
+    display: none;
+    padding: .85rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--modal-bg);
+    color: var(--text);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, .35);
+    backdrop-filter: blur(12px);
+  }
+  .settings-panel.show {
+    display: block;
+  }
+  .settings-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-bottom: .75rem;
+    font-weight: 800;
+  }
+  .settings-grid {
+    display: grid;
+    gap: .55rem;
+  }
+  .setting-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 46px;
+    align-items: center;
+    gap: .65rem;
+    min-height: 34px;
+    color: var(--muted);
+    font-size: .84rem;
+  }
+  .setting-row input[type="color"] {
+    width: 46px;
+    height: 32px;
+    padding: 2px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: transparent;
+  }
+  .setting-row input[type="range"] {
+    width: 100%;
+  }
+  .setting-actions {
+    display: flex;
+    gap: .45rem;
+    justify-content: flex-end;
+    margin-top: .8rem;
+  }
+  .setting-file {
+    display: flex;
+    justify-content: space-between;
+    gap: .75rem;
+    align-items: center;
+    color: var(--muted);
+    font-size: .84rem;
+  }
+  .setting-file input {
+    width: 152px;
+    color: var(--muted);
+  }
+  @media (max-width: 1100px) {
+    .desktop-stage {
+      justify-content: center;
+    }
+    .widget {
+      width: min(100%, 980px);
+      min-width: 0;
+    }
+  }
+  @media (max-width: 760px) {
+    .desktop-stage {
+      padding: 0;
+    }
+    .widget {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      border-radius: 0;
+      border-left: 0;
+      border-right: 0;
+    }
   }
 </style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="left">
-      <a class="tb-btn" href="../../index.html" title="홈으로" style="text-decoration:none">←</a>
+  <div class="desktop-stage">
+    <section class="widget" id="widget">
+  <header class="topbar">
+    <a class="icon-btn" href="../../index.html" aria-label="홈으로" title="홈으로">←</a>
+    <div class="month-nav" aria-label="월 이동">
+      <button class="icon-btn" id="prevBtn" type="button" aria-label="이전 달" title="이전 달">‹</button>
+      <div class="month-title">
+        <strong id="viewMonth">—</strong>
+        <span id="monthSummary">—</span>
+      </div>
+      <button class="icon-btn" id="nextBtn" type="button" aria-label="다음 달" title="다음 달">›</button>
     </div>
-    <div class="title" id="title">—</div>
-    <div class="right">
-      <button class="tb-btn" id="installBtn" title="앱 설치" style="display:none">📲</button>
-      <button class="tb-btn" id="exportBtn" title="백업 내보내기">⬇</button>
-      <button class="tb-btn" id="importBtn" title="백업 가져오기">⬆</button>
-      <button class="tb-btn" id="todayBtn" title="오늘">●</button>
-      <button class="tb-btn" id="prevBtn" title="이전 달">‹</button>
-      <button class="tb-btn" id="nextBtn" title="다음 달">›</button>
+    <div class="actions">
+      <button class="icon-btn" id="installBtn" type="button" aria-label="앱 설치" title="앱 설치" style="display:none">▣</button>
+      <button class="icon-btn" id="settingsBtn" type="button" aria-label="색상 설정" title="색상 설정" aria-expanded="false">⚙</button>
+      <button class="icon-btn" id="exportBtn" type="button" aria-label="백업 내보내기" title="백업 내보내기">⇩</button>
+      <button class="icon-btn" id="importBtn" type="button" aria-label="백업 가져오기" title="백업 가져오기">⇧</button>
     </div>
+  </header>
+
+  <section class="quickbar" aria-label="보기 옵션">
+    <label class="search-box" for="searchInput">
+      <span aria-hidden="true">⌕</span>
+      <input id="searchInput" type="search" placeholder="할 일 검색" autocomplete="off">
+    </label>
+    <button class="pill" id="hideDoneBtn" type="button" aria-pressed="false">완료 숨김</button>
+    <button class="pill primary" id="todayBtn" type="button">오늘</button>
+  </section>
+
+  <div class="weekdays" id="weekdays" aria-hidden="true"></div>
+  <main class="grid" id="grid" aria-label="월간 달력"></main>
+
+  <aside class="settings-panel" id="settingsPanel" aria-label="색상 설정">
+    <div class="settings-title">
+      <span>색상 설정</span>
+      <button class="icon-btn" id="settingsClose" type="button" aria-label="닫기" title="닫기">×</button>
+    </div>
+    <div class="settings-grid">
+      <label class="setting-row" for="textColor">글자 색상 <input id="textColor" type="color"></label>
+      <label class="setting-row" for="widgetBgColor">배경 색상 <input id="widgetBgColor" type="color"></label>
+      <label class="setting-row" for="lineColor">선 색상 <input id="lineColor" type="color"></label>
+      <label class="setting-row" for="weekendColor">주말 색상 <input id="weekendColor" type="color"></label>
+      <label class="setting-row" for="accentColor">오늘 색상 <input id="accentColor" type="color"></label>
+      <label class="setting-row" for="importantColor">중요 색상 <input id="importantColor" type="color"></label>
+      <label class="setting-row" for="bgOpacity">투명도 <input id="bgOpacity" type="range" min="35" max="96" step="1"></label>
+      <label class="setting-file" for="wallpaperInput">
+        <span>배경 이미지</span>
+        <input id="wallpaperInput" type="file" accept="image/*">
+      </label>
+    </div>
+    <div class="setting-actions">
+      <button class="text-btn" id="clearWallpaperBtn" type="button">배경 지우기</button>
+      <button class="text-btn" id="resetThemeBtn" type="button">초기화</button>
+    </div>
+  </aside>
+    </section>
   </div>
 
-  <div class="weekdays" id="weekdays"></div>
-  <div class="grid" id="grid"></div>
-
-  <!-- 날짜 편집 팝업 -->
   <div class="overlay" id="overlay">
-    <div class="editor" id="editor">
+    <section class="editor" id="editor" role="dialog" aria-modal="true" aria-labelledby="edDate">
       <div class="ed-head">
-        <span class="ed-date" id="edDate"></span>
-        <span class="ed-sub" id="edSub"></span>
+        <button class="icon-btn" id="edPrev" type="button" aria-label="이전 날짜" title="이전 날짜">‹</button>
+        <div class="ed-title">
+          <span class="ed-date" id="edDate"></span>
+          <span class="ed-sub" id="edSub"></span>
+        </div>
+        <button class="icon-btn" id="edNext" type="button" aria-label="다음 날짜" title="다음 날짜">›</button>
+        <button class="icon-btn" id="edClose" type="button" aria-label="닫기" title="닫기">×</button>
       </div>
       <ul class="ed-list" id="edList"></ul>
-      <div class="ed-add">
-        <input id="edInput" type="text" placeholder="할 일 추가…" maxlength="200" autocomplete="off">
-        <button class="impToggle" id="impToggle" title="중요(빨강)">★</button>
-        <button class="go" id="edGo" aria-label="추가">+</button>
+      <div class="ed-tools">
+        <button class="text-btn" id="clearDoneBtn" type="button" hidden>완료 삭제</button>
       </div>
-    </div>
+      <form class="ed-add" id="edForm">
+        <label class="sr-only" for="edInput">할 일</label>
+        <input id="edInput" type="text" placeholder="할 일 추가" maxlength="200" autocomplete="off">
+        <button class="imp-toggle" id="impToggle" type="button" aria-label="새 할 일 중요 표시" aria-pressed="false" title="중요 표시">★</button>
+        <button class="add-btn" id="edGo" type="submit" aria-label="추가">+</button>
+      </form>
+    </section>
   </div>
 
   <input type="file" id="fileInput" accept="application/json" style="display:none">
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 const STORE_KEY = "calendarTask.v1";
-const WEEK_LONG  = ["일요일","월요일","화요일","수요일","목요일","금요일","토요일"];
-const WEEK_SHORT = ["일","월","화","수","목","금","토"];
+const THEME_KEY = "calendarTask.theme.v1";
+const WEEK_LONG = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
+const WEEK_SHORT = ["일", "월", "화", "수", "목", "금", "토"];
+const MAX_CELL_ITEMS = 4;
+const DEFAULT_THEME = {
+  text: "#f8f7df",
+  background: "#23282b",
+  line: "#9fc7df",
+  weekend: "#e9500f",
+  accent: "#ff4057",
+  important: "#ff2626",
+  opacity: 78,
+  wallpaper: ""
+};
+
 let data = load();
+let theme = loadTheme();
 let view = new Date();
-let openKey = null;       // 편집 중인 날짜
-let newImp = false;       // 새 항목 중요 여부
+let openKey = null;
+let lastFocus = null;
+let newImp = false;
+let searchText = "";
+let hideDone = false;
+let editingId = null;
 
-function load() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { return {}; } }
-function save() { localStorage.setItem(STORE_KEY, JSON.stringify(data)); }
-function ymd(d) { return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
-function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
-
-/* 요일 헤더 */
-(function () {
-  const wd = document.getElementById("weekdays");
-  WEEK_LONG.forEach((w,i) => {
-    const s = document.createElement("span");
-    s.textContent = w; s.setAttribute("data-short", WEEK_SHORT[i]);
-    wd.appendChild(s);
-  });
-})();
-
-/* 상단 날짜 문구 */
-function renderTitle() {
-  const t = new Date();
-  document.getElementById("title").textContent =
-    `오늘은 ${t.getFullYear()}년 ${t.getMonth()+1}월 ${t.getDate()}일 ${WEEK_LONG[t.getDay()]}`;
+function normalizeTask(task) {
+  return {
+    id: task && task.id ? String(task.id) : uid(),
+    text: task && task.text ? String(task.text).trim().slice(0, 200) : "",
+    done: Boolean(task && task.done),
+    priority: task && task.priority === "high" ? "high" : "normal"
+  };
 }
 
-/* 달력 렌더 */
+function normalizeData(raw) {
+  const next = {};
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return next;
+  Object.keys(raw).forEach(key => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !Array.isArray(raw[key])) return;
+    const tasks = raw[key].map(normalizeTask).filter(task => task.text);
+    if (tasks.length) next[key] = tasks;
+  });
+  return next;
+}
+
+function load() {
+  try {
+    return normalizeData(JSON.parse(localStorage.getItem(STORE_KEY)));
+  } catch {
+    return {};
+  }
+}
+
+function save() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(data));
+}
+
+function loadTheme() {
+  try {
+    return { ...DEFAULT_THEME, ...JSON.parse(localStorage.getItem(THEME_KEY)) };
+  } catch {
+    return { ...DEFAULT_THEME };
+  }
+}
+
+function saveTheme() {
+  localStorage.setItem(THEME_KEY, JSON.stringify(theme));
+}
+
+function hexToRgb(hex) {
+  const clean = String(hex || "").replace("#", "");
+  const value = clean.length === 3
+    ? clean.split("").map(ch => ch + ch).join("")
+    : clean.padEnd(6, "0").slice(0, 6);
+  const num = parseInt(value, 16);
+  return {
+    r: (num >> 16) & 255,
+    g: (num >> 8) & 255,
+    b: num & 255
+  };
+}
+
+function rgba(hex, alpha) {
+  const { r, g, b } = hexToRgb(hex);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function contrastColor(hex) {
+  const { r, g, b } = hexToRgb(hex);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 150 ? "#172033" : "#ffffff";
+}
+
+function applyTheme() {
+  const root = document.documentElement;
+  const alpha = Number(theme.opacity) / 100;
+  root.style.setProperty("--text", theme.text);
+  root.style.setProperty("--muted", rgba(theme.text, .72));
+  root.style.setProperty("--done", rgba(theme.text, .62));
+  root.style.setProperty("--line", rgba(theme.line, .74));
+  root.style.setProperty("--line-strong", rgba(theme.line, .9));
+  root.style.setProperty("--accent", theme.accent);
+  root.style.setProperty("--accent-contrast", contrastColor(theme.accent));
+  root.style.setProperty("--accent-soft", rgba(theme.accent, .24));
+  root.style.setProperty("--today", theme.accent);
+  root.style.setProperty("--today-soft", rgba(theme.accent, .2));
+  root.style.setProperty("--danger", theme.important);
+  root.style.setProperty("--danger-soft", rgba(theme.important, .18));
+  root.style.setProperty("--widget-bg", rgba(theme.background, alpha));
+  root.style.setProperty("--modal-bg", rgba(theme.background, Math.min(.96, alpha + .12)));
+  root.style.setProperty("--bar-bg", rgba(theme.background, Math.min(.9, alpha + .08)));
+  root.style.setProperty("--tool-bg", rgba(theme.background, Math.min(.82, alpha + .02)));
+  root.style.setProperty("--cell-bg", rgba(theme.background, Math.max(.28, alpha - .08)));
+  root.style.setProperty("--cell-hover", rgba(theme.background, Math.min(.92, alpha + .08)));
+  root.style.setProperty("--other-bg", rgba(theme.background, Math.max(.22, alpha - .22)));
+  root.style.setProperty("--weekend-bg", rgba(theme.weekend, Math.min(.92, alpha + .1)));
+  root.style.setProperty("--weekend", rgba(theme.weekend, Math.min(.92, alpha + .1)));
+  root.style.setProperty("--wallpaper-image", theme.wallpaper ? `url("${theme.wallpaper}")` : "none");
+  document.body.classList.toggle("has-wallpaper", Boolean(theme.wallpaper));
+}
+
+function syncThemeControls() {
+  const values = {
+    textColor: theme.text,
+    widgetBgColor: theme.background,
+    lineColor: theme.line,
+    weekendColor: theme.weekend,
+    accentColor: theme.accent,
+    importantColor: theme.important,
+    bgOpacity: theme.opacity
+  };
+  Object.keys(values).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = values[id];
+  });
+}
+
+function updateTheme(key, value) {
+  theme[key] = value;
+  applyTheme();
+  saveTheme();
+}
+
+function toggleSettings(show) {
+  const panel = document.getElementById("settingsPanel");
+  const btn = document.getElementById("settingsBtn");
+  const next = typeof show === "boolean" ? show : !panel.classList.contains("show");
+  panel.classList.toggle("show", next);
+  btn.setAttribute("aria-expanded", String(next));
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function ymd(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+function dateFromKey(key) {
+  const [yy, mm, dd] = key.split("-").map(Number);
+  return new Date(yy, mm - 1, dd);
+}
+
+function formatMonth(date) {
+  return `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
+}
+
+function formatDay(key) {
+  const date = dateFromKey(key);
+  return `${date.getMonth() + 1}월 ${date.getDate()}일 (${WEEK_SHORT[date.getDay()]})`;
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+function getTasks(key) {
+  return data[key] || [];
+}
+
+function taskMatchesSearch(task) {
+  return !searchText || task.text.toLowerCase().includes(searchText);
+}
+
+function visibleTasks(tasks) {
+  return tasks.filter(task => (!hideDone || !task.done) && taskMatchesSearch(task));
+}
+
+function monthStats(y, m) {
+  const prefix = `${y}-${String(m + 1).padStart(2, "0")}-`;
+  let total = 0;
+  let pending = 0;
+  let done = 0;
+  let important = 0;
+  Object.keys(data).forEach(key => {
+    if (!key.startsWith(prefix)) return;
+    data[key].forEach(task => {
+      total += 1;
+      if (task.done) done += 1;
+      else pending += 1;
+      if (!task.done && task.priority === "high") important += 1;
+    });
+  });
+  return { total, pending, done, important };
+}
+
+function renderWeekdays() {
+  const wd = document.getElementById("weekdays");
+  wd.innerHTML = "";
+  WEEK_LONG.forEach((day, i) => {
+    const span = document.createElement("span");
+    span.textContent = day;
+    span.dataset.short = WEEK_SHORT[i];
+    wd.appendChild(span);
+  });
+}
+
+function renderHeader() {
+  const y = view.getFullYear();
+  const m = view.getMonth();
+  const stats = monthStats(y, m);
+  document.getElementById("viewMonth").textContent = formatMonth(view);
+  document.getElementById("monthSummary").textContent = stats.total
+    ? `남은 일 ${stats.pending}개 · 완료 ${stats.done}개 · 중요 ${stats.important}개`
+    : "등록된 할 일이 없습니다";
+}
+
 function renderGrid() {
-  const y = view.getFullYear(), m = view.getMonth();
-  const todayStr = ymd(new Date());
+  renderHeader();
+  const y = view.getFullYear();
+  const m = view.getMonth();
+  const todayKey = ymd(new Date());
   const first = new Date(y, m, 1);
   const startOffset = first.getDay();
   const start = new Date(y, m, 1 - startOffset);
-  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
   const weeks = Math.ceil((startOffset + daysInMonth) / 7);
-
   const grid = document.getElementById("grid");
-  grid.style.gridTemplateRows = `repeat(${weeks}, 1fr)`;
+
+  grid.style.gridTemplateRows = `repeat(${weeks}, minmax(0, 1fr))`;
   grid.innerHTML = "";
 
-  for (let i = 0; i < weeks*7; i++) {
-    const d = new Date(start); d.setDate(start.getDate()+i);
-    const key = ymd(d);
-    const dow = d.getDay();
-    const inMonth = d.getMonth() === m;
+  for (let i = 0; i < weeks * 7; i += 1) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + i);
+    const key = ymd(date);
+    const dow = date.getDay();
+    const inMonth = date.getMonth() === m;
+    const tasks = getTasks(key);
+    const shown = visibleTasks(tasks);
+    const pending = tasks.filter(task => !task.done).length;
+    const done = tasks.filter(task => task.done).length;
+    const important = tasks.filter(task => !task.done && task.priority === "high").length;
+    const isToday = key === todayKey;
 
-    const cell = document.createElement("div");
+    const cell = document.createElement("button");
+    cell.type = "button";
     cell.className = "cell";
     if (dow === 0) cell.classList.add("sun");
     if (dow === 6) cell.classList.add("sat");
     if (dow === 0 || dow === 6) cell.classList.add("wknd");
     if (!inMonth) cell.classList.add("other");
-    if (key === todayStr) cell.classList.add("today");
+    if (isToday) cell.classList.add("today");
+    if (openKey === key) cell.classList.add("selected");
+    if (tasks.length && !shown.length && (searchText || hideDone)) cell.classList.add("filtered");
+    if (isToday) cell.setAttribute("aria-current", "date");
 
-    const isToday = key === todayStr;
-    const list = data[key] || [];
-    let itemsHtml = "";
-    list.forEach(t => {
-      const cls = "item" + (t.done ? " done" : (t.priority === "high" ? " imp" : ""));
-      itemsHtml += `<div class="${cls}">${esc(t.text)}</div>`;
+    cell.setAttribute(
+      "aria-label",
+      `${date.getMonth() + 1}월 ${date.getDate()}일 ${WEEK_LONG[dow]}, 남은 일 ${pending}개, 완료 ${done}개`
+    );
+
+    const badges = [];
+    if (pending) badges.push(`<span class="badge pending">남음 ${pending}</span>`);
+    if (important) badges.push(`<span class="badge important">중요 ${important}</span>`);
+    if (done) badges.push(`<span class="badge done">완료 ${done}</span>`);
+
+    const itemHtml = shown.slice(0, MAX_CELL_ITEMS).map(task => {
+      const cls = "item" + (task.done ? " done" : task.priority === "high" ? " imp" : "");
+      return `<div class="${cls}">${esc(task.text)}</div>`;
+    }).join("");
+    const moreHtml = shown.length > MAX_CELL_ITEMS
+      ? `<div class="more">+${shown.length - MAX_CELL_ITEMS}개 더</div>`
+      : "";
+
+    cell.innerHTML = `
+      <div class="cell-head">
+        <span class="day-num">${date.getDate()}</span>
+        ${isToday ? '<span class="today-tag">오늘</span>' : ""}
+      </div>
+      <div class="day-badges">${badges.join("")}</div>
+      <div class="items">${itemHtml}${moreHtml}</div>
+    `;
+    cell.addEventListener("click", () => {
+      if (!inMonth) {
+        view = new Date(date.getFullYear(), date.getMonth(), 1);
+      }
+      openEditor(key);
     });
-
-    cell.innerHTML =
-      `<div class="num">${d.getDate()}${isToday ? '<span class="lbl">오늘</span>' : ''}</div>` +
-      `<div class="items">${itemsHtml}</div>`;
-    cell.addEventListener("click", () => openEditor(key));
     grid.appendChild(cell);
   }
 }
 
-function esc(s) { return s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
-
-/* 편집 팝업 */
-function openEditor(key) {
-  openKey = key; newImp = false;
-  document.getElementById("impToggle").classList.remove("on");
-  const [yy,mm,dd] = key.split("-").map(Number);
-  const dt = new Date(yy, mm-1, dd);
-  document.getElementById("edDate").textContent = `${mm}월 ${dd}일 (${WEEK_SHORT[dt.getDay()]})`;
-  renderEditor();
-  document.getElementById("overlay").classList.add("show");
-  setTimeout(() => document.getElementById("edInput").focus(), 30);
-}
 function renderEditor() {
-  const list = data[openKey] || [];
-  const done = list.filter(t => t.done).length;
-  document.getElementById("edSub").textContent = list.length ? `${list.length}개 · 완료 ${done}` : "";
+  if (!openKey) return;
+  const tasks = getTasks(openKey);
+  const pending = tasks.filter(task => !task.done).length;
+  const done = tasks.filter(task => task.done).length;
+  const high = tasks.filter(task => !task.done && task.priority === "high").length;
   const ul = document.getElementById("edList");
+  const clearBtn = document.getElementById("clearDoneBtn");
+
+  document.getElementById("edDate").textContent = formatDay(openKey);
+  document.getElementById("edSub").textContent = tasks.length
+    ? `남은 일 ${pending}개 · 완료 ${done}개 · 중요 ${high}개`
+    : "할 일이 없습니다";
+  clearBtn.hidden = done === 0;
   ul.innerHTML = "";
-  if (!list.length) { ul.innerHTML = `<li class="ed-empty">할 일을 추가해 보세요.</li>`; return; }
-  list.forEach(t => {
+
+  if (!tasks.length) {
+    ul.innerHTML = '<li class="ed-empty">이 날짜에 등록된 할 일이 없습니다.</li>';
+    return;
+  }
+
+  tasks.forEach(task => {
     const li = document.createElement("li");
-    li.className = "ed-item" + (t.done ? " done" : "") + (t.priority === "high" ? " imp" : "");
-    li.innerHTML =
-      `<span class="chk">${t.done ? "✓" : ""}</span>` +
-      `<span class="txt"></span>` +
-      `<button class="star ${t.priority==="high"?"on":""}" title="중요">★</button>` +
-      `<button class="del" title="삭제">✕</button>`;
-    li.querySelector(".txt").textContent = t.text;
-    const toggle = () => { t.done = !t.done; commit(); };
-    li.querySelector(".chk").onclick = toggle;
-    li.querySelector(".txt").onclick = toggle;
-    li.querySelector(".star").onclick = () => { t.priority = t.priority === "high" ? "normal" : "high"; commit(); };
-    li.querySelector(".del").onclick = () => {
-      data[openKey] = (data[openKey]||[]).filter(x => x.id !== t.id);
-      if (!data[openKey].length) delete data[openKey];
+    li.className = "ed-item" + (task.done ? " done" : "") + (task.priority === "high" ? " imp" : "");
+
+    if (editingId === task.id) {
+      li.classList.add("editing");
+      li.innerHTML = `
+        <button class="ed-action chk" type="button" aria-label="${task.done ? "미완료로 변경" : "완료로 변경"}">${task.done ? "✓" : ""}</button>
+        <input class="edit-input" maxlength="200" value="${esc(task.text)}" aria-label="할 일 수정">
+        <button class="edit-save" type="button">저장</button>
+        <button class="edit-cancel" type="button">취소</button>
+      `;
+      const input = li.querySelector(".edit-input");
+      li.querySelector(".chk").onclick = () => { task.done = !task.done; commit(); };
+      li.querySelector(".edit-save").onclick = () => finishEdit(task.id, input.value);
+      li.querySelector(".edit-cancel").onclick = () => { editingId = null; renderEditor(); };
+      input.addEventListener("keydown", e => {
+        if (e.key === "Enter") finishEdit(task.id, input.value);
+        if (e.key === "Escape") {
+          editingId = null;
+          renderEditor();
+        }
+      });
+      ul.appendChild(li);
+      setTimeout(() => {
+        input.focus();
+        input.select();
+      }, 0);
+      return;
+    }
+
+    li.innerHTML = `
+      <button class="ed-action chk" type="button" aria-label="${task.done ? "미완료로 변경" : "완료로 변경"}">${task.done ? "✓" : ""}</button>
+      <span class="ed-text"></span>
+      <button class="ed-action star ${task.priority === "high" ? "on" : ""}" type="button" aria-label="${task.priority === "high" ? "중요 해제" : "중요로 표시"}" title="중요 표시">★</button>
+      <button class="ed-action edit" type="button" aria-label="수정" title="수정">✎</button>
+      <button class="ed-action del" type="button" aria-label="삭제" title="삭제">×</button>
+    `;
+    li.querySelector(".ed-text").textContent = task.text;
+    li.querySelector(".chk").onclick = () => {
+      task.done = !task.done;
       commit();
     };
+    li.querySelector(".ed-text").ondblclick = () => {
+      editingId = task.id;
+      renderEditor();
+    };
+    li.querySelector(".star").onclick = () => {
+      task.priority = task.priority === "high" ? "normal" : "high";
+      commit();
+    };
+    li.querySelector(".edit").onclick = () => {
+      editingId = task.id;
+      renderEditor();
+    };
+    li.querySelector(".del").onclick = () => deleteTask(task.id);
     ul.appendChild(li);
   });
 }
-function commit() { save(); renderEditor(); renderGrid(); }
+
+function openEditor(key) {
+  openKey = key;
+  editingId = null;
+  newImp = false;
+  lastFocus = document.activeElement;
+  setImpToggle(false);
+  document.getElementById("overlay").classList.add("show");
+  renderGrid();
+  renderEditor();
+  setTimeout(() => document.getElementById("edInput").focus(), 30);
+}
+
+function closeEditor() {
+  document.getElementById("overlay").classList.remove("show");
+  openKey = null;
+  editingId = null;
+  renderGrid();
+  if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
+}
+
+function commit() {
+  if (openKey && data[openKey] && !data[openKey].length) delete data[openKey];
+  save();
+  renderGrid();
+  renderEditor();
+}
 
 function addItem() {
   const input = document.getElementById("edInput");
   const text = input.value.trim();
-  if (!text) return;
+  if (!openKey || !text) return;
   if (!data[openKey]) data[openKey] = [];
-  data[openKey].push({ id: uid(), text, done: false, priority: newImp ? "high" : "normal" });
+  data[openKey].push({ id: uid(), text: text.slice(0, 200), done: false, priority: newImp ? "high" : "normal" });
   input.value = "";
-  newImp = false; document.getElementById("impToggle").classList.remove("on");
+  setImpToggle(false);
   commit();
   input.focus();
 }
-function closeEditor() { document.getElementById("overlay").classList.remove("show"); openKey = null; }
 
-/* 백업 */
+function finishEdit(id, value) {
+  const text = value.trim();
+  const tasks = getTasks(openKey);
+  const task = tasks.find(item => item.id === id);
+  if (!task) return;
+  if (!text) {
+    deleteTask(id);
+    return;
+  }
+  task.text = text.slice(0, 200);
+  editingId = null;
+  commit();
+}
+
+function deleteTask(id) {
+  data[openKey] = getTasks(openKey).filter(task => task.id !== id);
+  if (!data[openKey].length) delete data[openKey];
+  editingId = null;
+  commit();
+  toast("삭제했습니다");
+}
+
+function clearDone() {
+  const before = getTasks(openKey).length;
+  data[openKey] = getTasks(openKey).filter(task => !task.done);
+  if (!data[openKey].length) delete data[openKey];
+  commit();
+  toast(`완료한 일 ${before - getTasks(openKey).length}개를 삭제했습니다`);
+}
+
+function setImpToggle(value) {
+  newImp = value;
+  const btn = document.getElementById("impToggle");
+  btn.classList.toggle("on", newImp);
+  btn.setAttribute("aria-pressed", String(newImp));
+}
+
+function moveMonth(delta) {
+  view = new Date(view.getFullYear(), view.getMonth() + delta, 1);
+  renderGrid();
+}
+
+function goToday() {
+  view = new Date();
+  renderGrid();
+  toast("오늘이 있는 달로 이동했습니다");
+}
+
+function moveEditorDay(delta) {
+  if (!openKey) return;
+  const date = dateFromKey(openKey);
+  date.setDate(date.getDate() + delta);
+  const nextKey = ymd(date);
+  view = new Date(date.getFullYear(), date.getMonth(), 1);
+  openEditor(nextKey);
+}
+
 function exportData() {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = `calendar-task-${ymd(new Date())}.json`;
-  a.click(); URL.revokeObjectURL(a.href);
-  toast("백업 파일을 내보냈어요");
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast("백업 파일을 내보냈습니다");
 }
+
 function importData(file) {
-  const r = new FileReader();
-  r.onload = () => {
+  const reader = new FileReader();
+  reader.onload = () => {
     try {
-      const inc = JSON.parse(r.result);
-      if (typeof inc !== "object" || Array.isArray(inc)) throw 0;
-      for (const k in inc) {
-        const cur = data[k] || [];
-        const ids = new Set(cur.map(t => t.id));
-        data[k] = cur.concat((inc[k]||[]).filter(t => t && !ids.has(t.id)));
-      }
-      save(); renderGrid();
-      toast("가져와서 병합했어요");
-    } catch { toast("올바른 백업 파일이 아니에요"); }
+      const incoming = normalizeData(JSON.parse(reader.result));
+      Object.keys(incoming).forEach(key => {
+        if (!data[key]) data[key] = [];
+        const ids = new Set(data[key].map(task => task.id));
+        incoming[key].forEach(task => {
+          if (ids.has(task.id)) task.id = uid();
+          ids.add(task.id);
+          data[key].push(task);
+        });
+      });
+      save();
+      renderGrid();
+      renderEditor();
+      toast("백업을 가져와 병합했습니다");
+    } catch {
+      toast("올바른 백업 파일이 아닙니다");
+    }
   };
-  r.readAsText(file);
+  reader.readAsText(file);
 }
 
 let toastTimer;
-function toast(msg) {
+function toast(message) {
   const el = document.getElementById("toast");
-  el.textContent = msg; el.classList.add("show");
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
+  el.textContent = message;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
 }
 
-/* 이벤트 */
-document.getElementById("prevBtn").onclick = () => { view.setMonth(view.getMonth()-1); renderGrid(); };
-document.getElementById("nextBtn").onclick = () => { view.setMonth(view.getMonth()+1); renderGrid(); };
-document.getElementById("todayBtn").onclick = () => { view = new Date(); renderTitle(); renderGrid(); };
-document.getElementById("edGo").onclick = addItem;
-document.getElementById("edInput").addEventListener("keydown", e => {
-  if (e.key === "Enter") addItem();
-  if (e.key === "Escape") closeEditor();
+document.getElementById("prevBtn").onclick = () => moveMonth(-1);
+document.getElementById("nextBtn").onclick = () => moveMonth(1);
+document.getElementById("todayBtn").onclick = goToday;
+document.getElementById("hideDoneBtn").onclick = function () {
+  hideDone = !hideDone;
+  this.setAttribute("aria-pressed", String(hideDone));
+  renderGrid();
+};
+document.getElementById("searchInput").addEventListener("input", e => {
+  searchText = e.target.value.trim().toLowerCase();
+  renderGrid();
 });
-document.getElementById("impToggle").onclick = function () { newImp = !newImp; this.classList.toggle("on", newImp); };
-document.getElementById("overlay").addEventListener("click", e => { if (e.target.id === "overlay") closeEditor(); });
+document.getElementById("settingsBtn").onclick = () => toggleSettings();
+document.getElementById("settingsClose").onclick = () => toggleSettings(false);
+document.getElementById("textColor").addEventListener("input", e => updateTheme("text", e.target.value));
+document.getElementById("widgetBgColor").addEventListener("input", e => updateTheme("background", e.target.value));
+document.getElementById("lineColor").addEventListener("input", e => updateTheme("line", e.target.value));
+document.getElementById("weekendColor").addEventListener("input", e => updateTheme("weekend", e.target.value));
+document.getElementById("accentColor").addEventListener("input", e => updateTheme("accent", e.target.value));
+document.getElementById("importantColor").addEventListener("input", e => updateTheme("important", e.target.value));
+document.getElementById("bgOpacity").addEventListener("input", e => updateTheme("opacity", Number(e.target.value)));
+document.getElementById("resetThemeBtn").onclick = () => {
+  theme = { ...DEFAULT_THEME };
+  applyTheme();
+  syncThemeControls();
+  saveTheme();
+  toast("색상 설정을 초기화했습니다");
+};
+document.getElementById("clearWallpaperBtn").onclick = () => {
+  theme.wallpaper = "";
+  document.getElementById("wallpaperInput").value = "";
+  applyTheme();
+  saveTheme();
+  toast("배경 이미지를 지웠습니다");
+};
+document.getElementById("wallpaperInput").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024) {
+    toast("3MB 이하 이미지를 선택해 주세요");
+    e.target.value = "";
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    theme.wallpaper = String(reader.result);
+    applyTheme();
+    saveTheme();
+    toast("배경 이미지를 적용했습니다");
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById("edForm").addEventListener("submit", e => {
+  e.preventDefault();
+  addItem();
+});
+document.getElementById("impToggle").onclick = () => setImpToggle(!newImp);
+document.getElementById("edClose").onclick = closeEditor;
+document.getElementById("edPrev").onclick = () => moveEditorDay(-1);
+document.getElementById("edNext").onclick = () => moveEditorDay(1);
+document.getElementById("clearDoneBtn").onclick = clearDone;
+document.getElementById("overlay").addEventListener("click", e => {
+  if (e.target.id === "overlay") closeEditor();
+});
 document.getElementById("exportBtn").onclick = exportData;
 document.getElementById("importBtn").onclick = () => document.getElementById("fileInput").click();
-document.getElementById("fileInput").addEventListener("change", e => { if (e.target.files[0]) importData(e.target.files[0]); e.target.value=""; });
-document.addEventListener("keydown", e => { if (e.key === "Escape") closeEditor(); });
+document.getElementById("fileInput").addEventListener("change", e => {
+  if (e.target.files[0]) importData(e.target.files[0]);
+  e.target.value = "";
+});
+document.addEventListener("click", e => {
+  const panel = document.getElementById("settingsPanel");
+  const btn = document.getElementById("settingsBtn");
+  if (!panel.classList.contains("show")) return;
+  if (panel.contains(e.target) || btn.contains(e.target)) return;
+  toggleSettings(false);
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && document.getElementById("settingsPanel").classList.contains("show")) {
+    toggleSettings(false);
+    return;
+  }
+  if (e.key === "Escape" && openKey) {
+    if (editingId) {
+      editingId = null;
+      renderEditor();
+      return;
+    }
+    closeEditor();
+  }
+  if (!openKey && e.key.toLowerCase() === "t" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    goToday();
+  }
+});
 
-/* PWA */
 let deferredPrompt;
-window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferredPrompt = e; document.getElementById("installBtn").style.display = "grid"; });
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById("installBtn").style.display = "inline-grid";
+});
 document.getElementById("installBtn").onclick = async () => {
   if (!deferredPrompt) return;
-  deferredPrompt.prompt(); await deferredPrompt.userChoice;
-  deferredPrompt = null; document.getElementById("installBtn").style.display = "none";
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById("installBtn").style.display = "none";
 };
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 
-/* 자정 넘어가면 '오늘' 갱신 */
-setInterval(() => { renderTitle(); }, 60*1000);
+setInterval(() => {
+  renderGrid();
+}, 60 * 1000);
 
-renderTitle();
+applyTheme();
+syncThemeControls();
+renderWeekdays();
 renderGrid();
 </script>
 </body>

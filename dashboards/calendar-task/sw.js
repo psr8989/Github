@@ -1,5 +1,5 @@
 // 간단한 앱 셸 캐시 — 오프라인에서도 앱이 열리도록 함
-const CACHE = "calendar-task-v1";
+const CACHE = "calendar-task-v3";
 const ASSETS = [
   "./",
   "./index.html",
