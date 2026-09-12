@@ -1,5 +1,7 @@
 """Reproducible price-only scenario model. Python standard library only."""
 import calendar
+import csv
+import io
 import datetime as dt
 import json
 import math
@@ -61,6 +63,13 @@ def run():
     text = json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False)
     (OUT/'data.json').write_text(text, encoding='utf-8')
     (OUT/'data.js').write_text('window.STOCK_DATA = '+text+';\n', encoding='utf-8')
+    buffer = io.StringIO(newline='')
+    writer = csv.writer(buffer)
+    writer.writerow(['종목', '날짜', '하락_P10_원', '기준_P50_원', '상승_P90_원', '기준종가_원', '기준수익률_pct', '분석기준일'])
+    for stock in stocks:
+        for f in stock['forecasts'][1:]:
+            writer.writerow([stock['name'], f['date'], *[int(f[k]/100+0.5)*100 for k in ('low', 'base', 'high')], stock['last'], round((f['base']/stock['last']-1)*100, 2), str(ASOF)])
+    (OUT/'forecast.csv').write_text(buffer.getvalue(), encoding='utf-8-sig', newline='')
     print(json.dumps([dict(name=s['name'], last=s['last'], december=s['forecasts'][-1], mape=s['backtest']['mape'], naive=s['backtest']['naiveMape']) for s in stocks], ensure_ascii=False, indent=2))
 
 if __name__ == '__main__':
