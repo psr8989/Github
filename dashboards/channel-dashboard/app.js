@@ -20,6 +20,7 @@
   ];
   const FILTER_DIMS = ['Period_Index', 'Period', 'Cate0'];
   const DROPDOWN_DIMS = ['Period'];            // 드롭다운(체크박스 다중 선택)으로 보여줄 필터
+  const SINGLE_DIMS = ['Period_Index'];        // '전체' 없이 반드시 1개만 선택하는 필터
   const DEFAULT_FILTERS = { Period_Index: ['Month'] }; // 파일을 불러오거나 초기화할 때의 기본 선택
   const DEFAULT_FILE = 'Raw_data.xlsx';
 
@@ -54,6 +55,15 @@
     if (v === null || !isFinite(v)) return '–';
     if (Math.abs(v) < 1000) return Number.isInteger(v) ? String(v) : nfDec.format(v);
     return nfCompact.format(v);
+  }
+  // 막대 값 라벨: 10만 미만은 전체 숫자, 그 이상은 유효숫자 3자리 축약(예: 45.7억)
+  const nfSig3 = new Intl.NumberFormat('ko-KR', { notation: 'compact', maximumSignificantDigits: 3 });
+  function fmtBar(v) {
+    if (v === null || v === undefined || !isFinite(v)) return '';
+    const a = Math.abs(v);
+    if (a >= 100000) return nfSig3.format(v);
+    if (Number.isInteger(v) || a >= 1000) return nfInt.format(v);
+    return nfDec.format(v);
   }
   function naturalSort(a, b) {
     const na = toNum(a), nb = toNum(b);
@@ -555,7 +565,7 @@
 
   // ───────────────────────── 상태 & 뷰 계산 ─────────────────────────
   const state = {
-    model: null, fileName: '', channel: 'Seller', view: 'long', sort: null, ddOpen: null,
+    model: null, fileName: '', channel: 'Seller', sort: null, ddOpen: null,
     filters: Object.fromEntries(FILTER_DIMS.map((d) => [d, new Set()])),
   };
   const selActive = (d) => state.filters[d].size > 0;
@@ -721,10 +731,11 @@
           '<div class="dd-menu"' + (open ? '' : ' hidden') + '>' + items.join('') + '</div></div></div>';
       }
 
-      const chips = ['<button type="button" class="chip all' + (selActive(d) ? '' : ' on') + '" data-dim="' + esc(d) + '" data-all="1"' + (notApplicable ? ' disabled' : '') + '>전체</button>']
+      const single = SINGLE_DIMS.includes(d);
+      const chips = (single ? [] : ['<button type="button" class="chip all' + (selActive(d) ? '' : ' on') + '" data-dim="' + esc(d) + '" data-all="1"' + (notApplicable ? ' disabled' : '') + '>전체</button>'])
         .concat(opts.map((k) => {
           const on = state.filters[d].has(k);
-          const dis = !avail.has(k) && !on;
+          const dis = !single && !avail.has(k) && !on; // 단일 선택은 항상 전환 가능 (전환 시 pruneUnavailable)
           return '<button type="button" class="chip' + (on ? ' on' : '') + '" data-dim="' + esc(d) + '" data-key="' + esc(k) + '"' +
             (dis ? ' disabled' : '') + ' aria-pressed="' + on + '">' + esc(optLabel(k)) + '</button>';
         }));
@@ -742,11 +753,10 @@
   function renderTable(view) {
     const wrap = $('tableWrap');
     const isPivot = view.data && view.data.kind === 'pivot';
-    $('viewToggle').hidden = !isPivot;
     $('tableTitle').innerHTML = '데이터 테이블 <span class="badge">' + esc(state.channel) + '</span>';
     if (view.empty) { wrap.innerHTML = '<div class="empty">' + esc(view.empty) + '</div>'; return; }
     if (!view.rows.length) { wrap.innerHTML = '<div class="empty">선택한 조건에 맞는 데이터가 없습니다.</div>'; return; }
-    if (isPivot && state.view === 'sheet') { wrap.innerHTML = sheetLayoutTable(view); return; }
+    if (isPivot) { wrap.innerHTML = sheetLayoutTable(view); return; }
 
     let rows = view.rows.slice();
     if (state.sort && view.columns.some((c) => c.name === state.sort.col)) {
@@ -778,7 +788,8 @@
     const top = data.dims.length ? data.dims[data.dims.length - 1] : null;
     const head = '<th class="rowhead">' + (top ? esc(top.name) : '') + '</th>' +
       cols.map((c) => '<th class="num">' + (top ? esc(keyOf(c.disp[top.name])) : '') + '</th>').join('');
-    const dimRows = data.dims.slice(0, -1).map((d) => '<tr class="hdr"><td class="rowhead">' + esc(d.name) + '</td>' +
+    // 단일 선택 필터(Period_Index)는 이미 하나로 정해져 있으므로 행으로 보여주지 않음
+    const dimRows = data.dims.slice(0, -1).filter((d) => !SINGLE_DIMS.includes(d.filter)).map((d) => '<tr class="hdr"><td class="rowhead">' + esc(d.name) + '</td>' +
       cols.map((c) => '<td class="num">' + esc(keyOf(c.disp[d.name])) + '</td>').join('') + '</tr>').join('');
     const mRows = data.metrics.map((mt, mi) => '<tr><td class="rowhead">' + esc(mt.label) + '</td>' +
       view.colIdx.map((ci) => { const v = view.values[mi][ci]; return '<td class="num' + (v === null ? ' null' : '') + '">' + fmtFull(v) + '</td>'; }).join('') + '</tr>').join('');
@@ -804,7 +815,7 @@
         const div = document.createElement('div');
         div.className = 'cpanel';
         div.style.flex = Math.max(p.points.length, 2) + ' 1 0';
-        div.innerHTML = view.groupDim ? '<div class="ptitle">' + esc(p.group || '(빈 값)') + '</div>' : '';
+        div.innerHTML = view.groupDim && c.panels.length > 1 ? '<div class="ptitle">' + esc(p.group || '(빈 값)') + '</div>' : '';
         host.appendChild(div);
       });
     });
@@ -846,9 +857,16 @@
   }
 
   function drawPanel(div, panel, metric, groupDim) {
-    const W = Math.max(div.clientWidth || 300, 120), H = 210;
-    const m = { t: 18, r: 6, b: 26, l: 46 };
+    const W = Math.max(div.clientWidth || 300, 120);
     const pts = panel.points;
+    // 모든 막대에 값 표시: 막대 폭에 들어가면 가로, 아니면 세로로 세움
+    const labels = pts.map((p) => fmtBar(p.value));
+    const textW = (s) => s.length * 6.1 + 2;
+    const maxTW = Math.max(0, ...labels.map(textW));
+    const band0 = (W - 52) / Math.max(pts.length, 1);
+    const vertical = maxTW > band0 - 4;
+    const m = { t: vertical ? maxTW + 10 : 20, r: 6, b: 26, l: 46 };
+    const H = 190 + m.t;
     const vals = pts.map((p) => p.value).filter((v) => v !== null && isFinite(v));
     const lo = Math.min(0, ...vals), hi = Math.max(0, ...vals);
     const ticks = niceTicks(lo, hi || (lo < 0 ? 0 : 1), 4);
@@ -873,8 +891,6 @@
     const maxLen = Math.max(...pts.map((p) => String(p.label).length));
     const step = Math.max(1, Math.ceil((maxLen * 6.2 + 8) / band));
     const gBars = svgEl('g', {}, svg);
-    let maxI = -1;
-    pts.forEach((p, i) => { if (p.value !== null && (maxI < 0 || Math.abs(p.value) > Math.abs(pts[maxI].value))) maxI = i; });
     const bars = [];
     pts.forEach((p, i) => {
       const cx = m.l + band * i + band / 2;
@@ -887,10 +903,14 @@
         const t = svgEl('text', { x: cx, y: H - m.b + 15, 'text-anchor': 'middle' }, gAxis);
         t.textContent = p.label;
       }
-      if (i === maxI && p.value !== null) {
-        const vy = p.value >= 0 ? y(p.value) - 5 : y(p.value) + 12;
-        const t = svgEl('text', { class: 'vlabel', x: cx, y: vy, 'text-anchor': 'middle' }, svg);
-        t.textContent = fmtCompact(p.value);
+      if (p.value !== null && isFinite(p.value)) {
+        const pos = p.value >= 0;
+        const ve = y(p.value);
+        const t = vertical
+          ? svgEl('text', { class: 'vlabel', x: cx + 3.5, y: pos ? ve - 5 : ve + 5, 'text-anchor': pos ? 'start' : 'end',
+            transform: 'rotate(-90 ' + (cx + 3.5) + ' ' + (pos ? ve - 5 : ve + 5) + ')' }, svg)
+          : svgEl('text', { class: 'vlabel', x: cx, y: pos ? ve - 6 : ve + 13, 'text-anchor': 'middle' }, svg);
+        t.textContent = labels[i];
       }
     });
     // 호버 영역 (막대보다 넓게)
@@ -939,12 +959,26 @@
     }
     const b = e.target.closest('.chip');
     if (!b || b.disabled) return;
-    const set = state.filters[b.dataset.dim];
-    if (b.dataset.all) set.clear();
+    const dim = b.dataset.dim;
+    const set = state.filters[dim];
+    if (SINGLE_DIMS.includes(dim)) {
+      if (set.has(b.dataset.key)) return;
+      set.clear();
+      set.add(b.dataset.key);
+      pruneUnavailable(dim);
+    } else if (b.dataset.all) set.clear();
     else if (set.has(b.dataset.key)) set.delete(b.dataset.key);
     else set.add(b.dataset.key);
     render();
   });
+  // Period_Index를 바꾸면 새 기준에 없는 다른 필터 선택값(예: Week 전용 기간)은 해제
+  function pruneUnavailable(changed) {
+    FILTER_DIMS.forEach((d) => {
+      if (d === changed || !selActive(d)) return;
+      const avail = availability(d);
+      [...state.filters[d]].forEach((k) => { if (!avail.has(k)) state.filters[d].delete(k); });
+    });
+  }
   $('filters').addEventListener('change', (e) => {
     const cb = e.target.closest('input[type="checkbox"][data-dim]');
     if (!cb) return;
@@ -962,13 +996,6 @@
     if (e.key === 'Escape' && state.ddOpen) { state.ddOpen = null; renderFilters(); }
   });
   $('resetFilters').addEventListener('click', () => { applyDefaultFilters(); render(); });
-  $('viewToggle').addEventListener('click', (e) => {
-    const b = e.target.closest('button');
-    if (!b) return;
-    state.view = b.dataset.view;
-    [...$('viewToggle').children].forEach((x) => x.classList.toggle('on', x === b));
-    renderTable(computeView());
-  });
   $('tableWrap').addEventListener('click', (e) => {
     const th = e.target.closest('th[data-sort]');
     if (!th) return;
@@ -991,6 +1018,7 @@
         const hit = opts.find((k) => norm(k) === norm(v)); // 실제 값 표기(month/Month)에 맞춤
         if (hit !== undefined) state.filters[d].add(hit);
       });
+      if (SINGLE_DIMS.includes(d) && !state.filters[d].size && opts.length) state.filters[d].add(opts[0]);
     });
     state.ddOpen = null;
   }
