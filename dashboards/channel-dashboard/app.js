@@ -583,6 +583,7 @@
     let values = data.cached;
     const notes = [];
     let basis = '시트 저장값';
+    let filterTag = '';
     if (rawDims.length) {
       if (data.recalc.ok) {
         const rowSet = new Set(m.raw.rows.map((o) => o.__r));
@@ -598,6 +599,7 @@
           return cell && cell.f ? ev.evalFormulaAt(data.sheetName, mt.r, col.c) : data.cached[mi][ci];
         }));
         basis = 'RAW에서 ' + rawDims.map((d) => d + '=' + [...state.filters[d]].map((k) => k || '(빈 값)').join('·')).join(', ') + ' 행만으로 수식 재계산';
+        filterTag = rawDims.map((d) => d + ': ' + [...state.filters[d]].map((k) => k || '(빈 값)').join(', ')).join(' / ');
       } else {
         notes.push(data.recalc.reason);
       }
@@ -628,7 +630,7 @@
       });
       return { metric: mt.label, panels };
     });
-    return { data, columns: dimCols.concat(metricCols), rows, charts, notes, basis, colIdx, values, groupDim };
+    return { data, columns: dimCols.concat(metricCols), rows, charts, notes, basis, filterTag, colIdx, values, groupDim };
   }
 
   // 다른 필터 조건을 적용했을 때 이 값이 존재하는지 (칩 비활성화용)
@@ -733,21 +735,15 @@
   }
 
   function renderContext(view) {
-    const parts = [];
-    if (view.data) {
-      parts.push('시트 <b>' + esc(view.data.sheetName) + '</b>');
-      parts.push('<b>' + nfInt.format(view.rows.length) + '</b>행 · <b>' + view.columns.length + '</b>개 열');
-      if (view.data.kind === 'pivot') parts.push('값 기준: <b>' + esc(view.basis) + '</b>');
-    }
-    (view.notes || []).forEach((n) => parts.push('<span class="warn">' + esc(n) + '</span>'));
-    $('context').innerHTML = parts.map((p) => '<span>' + p + '</span>').join('<span aria-hidden="true">|</span>');
+    // 재계산 불가 등 경고만 표시 (평소에는 비어 있어 숨김)
+    $('context').innerHTML = (view.notes || []).map((n) => '<span class="warn">' + esc(n) + '</span>').join('');
   }
 
   function renderTable(view) {
     const wrap = $('tableWrap');
     const isPivot = view.data && view.data.kind === 'pivot';
     $('viewToggle').hidden = !isPivot;
-    $('tableTitle').textContent = '데이터 테이블 · ' + state.channel;
+    $('tableTitle').innerHTML = '데이터 테이블 <span class="badge">' + esc(state.channel) + '</span>';
     if (view.empty) { wrap.innerHTML = '<div class="empty">' + esc(view.empty) + '</div>'; return; }
     if (!view.rows.length) { wrap.innerHTML = '<div class="empty">선택한 조건에 맞는 데이터가 없습니다.</div>'; return; }
     if (isPivot && state.view === 'sheet') { wrap.innerHTML = sheetLayoutTable(view); return; }
@@ -792,16 +788,16 @@
   function renderCharts(view) {
     const el = $('charts');
     const ch = CHANNELS.find((c) => c.id === state.channel);
-    $('chartTitle').textContent = '그래프 · ' + state.channel;
+    $('chartTitle').innerHTML = '그래프 <span class="badge">' + esc(state.channel) + '</span>';
     if (!ch.chart) { el.innerHTML = '<div class="empty">RAW Data는 테이블 조회용 채널입니다. 그래프는 Seller · Vis · Output · ETC · Rate 채널에서 확인하세요.</div>'; return; }
     if (!view.data || view.data.kind !== 'pivot') {
       el.innerHTML = '<div class="empty">' + (view.empty ? esc(view.empty) : '이 시트에서 그래프로 그릴 지표 구조를 찾지 못했습니다.') + '</div>';
       return;
     }
     if (!view.rows.length) { el.innerHTML = '<div class="empty">선택한 조건에 맞는 데이터가 없습니다.</div>'; return; }
-    el.innerHTML = view.charts.map((c, i) => '<div class="chart-card"><h3>' + esc(c.metric) + '</h3><div class="sub">' +
-      esc(view.basis) + (view.groupDim ? ' · ' + esc(view.groupDim.name) + '별로 축을 분리' : '') +
-      '</div><div class="panels" data-chart="' + i + '"></div></div>').join('');
+    el.innerHTML = view.charts.map((c, i) => '<div class="chart-card"><h3>' + esc(c.metric) + '</h3>' +
+      (view.filterTag ? '<div class="sub" title="' + esc(view.basis) + '">' + esc(view.filterTag) + '</div>' : '<div class="sub-gap"></div>') +
+      '<div class="panels" data-chart="' + i + '"></div></div>').join('');
     view.charts.forEach((c, i) => {
       const host = el.querySelector('[data-chart="' + i + '"]');
       c.panels.forEach((p) => {
