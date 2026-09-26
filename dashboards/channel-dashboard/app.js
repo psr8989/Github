@@ -19,6 +19,8 @@
     { id: 'RAW Data', names: ['RAW Data', 'RAW'], chart: false, table: true },
   ];
   const FILTER_DIMS = ['Period_Index', 'Period', 'Cate0'];
+  const DROPDOWN_DIMS = ['Period'];            // 드롭다운(체크박스 다중 선택)으로 보여줄 필터
+  const DEFAULT_FILTERS = { Period_Index: ['Month'] }; // 파일을 불러오거나 초기화할 때의 기본 선택
   const DEFAULT_FILE = 'Raw_data.xlsx';
 
   // ───────────────────────── 유틸 ─────────────────────────
@@ -553,7 +555,7 @@
 
   // ───────────────────────── 상태 & 뷰 계산 ─────────────────────────
   const state = {
-    model: null, fileName: '', channel: 'Seller', view: 'long', sort: null,
+    model: null, fileName: '', channel: 'Seller', view: 'long', sort: null, ddOpen: null,
     filters: Object.fromEntries(FILTER_DIMS.map((d) => [d, new Set()])),
   };
   const selActive = (d) => state.filters[d].size > 0;
@@ -672,15 +674,19 @@
     const m = state.model;
     $('channelTabs').innerHTML = CHANNELS.map((ch) => {
       const data = m.channels[ch.id];
-      const sub = data ? '시트: ' + data.sheetName : '시트 없음';
+      const title = data ? '시트: ' + data.sheetName : '시트 없음';
       return '<button type="button" role="tab" class="tab" data-ch="' + esc(ch.id) + '" aria-selected="' + (state.channel === ch.id) + '"' +
-        (data ? '' : ' disabled') + '><span class="t-name">' + esc(ch.id) + '</span><span class="t-sub">' + esc(sub) + '</span></button>';
+        ' title="' + esc(title) + '"' + (data ? '' : ' disabled') + '>' + esc(ch.id) + '</button>';
     }).join('');
   }
+
+  const optLabel = (k) => (k === '' ? '(빈 값)' : k);
 
   function renderFilters() {
     const m = state.model;
     const data = m.channels[state.channel];
+    const prevMenu = document.querySelector('.dd-menu');
+    const menuScroll = prevMenu ? prevMenu.scrollTop : 0;
     $('filters').innerHTML = FILTER_DIMS.map((d) => {
       const opts = m.options[d] || [];
       if (!opts.length) return '';
@@ -692,17 +698,38 @@
           ? '이 시트에는 ' + d + ' 열이 없어, 선택 시 RAW 해당 행만으로 시트 수식을 재계산합니다.'
           : '이 시트에는 적용할 수 없습니다 — ' + data.recalc.reason;
       }
+      const name = '<span class="fname"' + (note ? ' title="' + esc(note) + '"' : '') + '>' + esc(m.dimCol[d] || d) +
+        (note ? '<sup aria-hidden="true">*</sup>' : '') + '</span>';
+
+      if (DROPDOWN_DIMS.includes(d)) {
+        const sel = [...state.filters[d]];
+        const label = !sel.length ? '전체' : sel.length === 1 ? optLabel(sel[0]) : sel.length + '개 선택';
+        const open = state.ddOpen === d;
+        const items = ['<label class="dd-item all"><input type="checkbox" data-dim="' + esc(d) + '" data-all="1"' +
+          (sel.length ? '' : ' checked') + '> 전체</label>']
+          .concat(opts.map((k) => {
+            const on = state.filters[d].has(k);
+            const dis = !avail.has(k) && !on;
+            return '<label class="dd-item' + (dis ? ' dis' : '') + '"><input type="checkbox" data-dim="' + esc(d) + '" data-key="' + esc(k) + '"' +
+              (on ? ' checked' : '') + (dis ? ' disabled' : '') + '> ' + esc(optLabel(k)) + '</label>';
+          }));
+        return '<div class="fgroup">' + name + '<div class="dd" data-dim="' + esc(d) + '">' +
+          '<button type="button" class="dd-btn' + (sel.length ? ' on' : '') + '" aria-haspopup="true" aria-expanded="' + open + '"' +
+          (notApplicable ? ' disabled' : '') + '><span>' + esc(label) + '</span><span class="caret" aria-hidden="true">▾</span></button>' +
+          '<div class="dd-menu"' + (open ? '' : ' hidden') + '>' + items.join('') + '</div></div></div>';
+      }
+
       const chips = ['<button type="button" class="chip all' + (selActive(d) ? '' : ' on') + '" data-dim="' + esc(d) + '" data-all="1"' + (notApplicable ? ' disabled' : '') + '>전체</button>']
         .concat(opts.map((k) => {
           const on = state.filters[d].has(k);
           const dis = !avail.has(k) && !on;
           return '<button type="button" class="chip' + (on ? ' on' : '') + '" data-dim="' + esc(d) + '" data-key="' + esc(k) + '"' +
-            (dis ? ' disabled' : '') + ' aria-pressed="' + on + '">' + esc(k === '' ? '(빈 값)' : k) + '</button>';
+            (dis ? ' disabled' : '') + ' aria-pressed="' + on + '">' + esc(optLabel(k)) + '</button>';
         }));
-      const cnt = selActive(d) ? state.filters[d].size + '개 선택' : '전체';
-      return '<div class="fgroup"><div class="fname">' + esc(m.dimCol[d] || d) + '<small>' + cnt + '</small></div><div><div class="chips">' +
-        chips.join('') + '</div>' + (note ? '<div class="fnote">' + esc(note) + '</div>' : '') + '</div></div>';
+      return '<div class="fgroup">' + name + '<div class="chips">' + chips.join('') + '</div></div>';
     }).join('');
+    const menu = document.querySelector('.dd-menu:not([hidden])');
+    if (menu) menu.scrollTop = menuScroll;
   }
 
   function renderContext(view) {
@@ -907,6 +934,13 @@
     render();
   });
   $('filters').addEventListener('click', (e) => {
+    const dd = e.target.closest('.dd-btn');
+    if (dd) {
+      const dim = dd.closest('.dd').dataset.dim;
+      state.ddOpen = state.ddOpen === dim ? null : dim;
+      renderFilters();
+      return;
+    }
     const b = e.target.closest('.chip');
     if (!b || b.disabled) return;
     const set = state.filters[b.dataset.dim];
@@ -915,7 +949,23 @@
     else set.add(b.dataset.key);
     render();
   });
-  $('resetFilters').addEventListener('click', () => { FILTER_DIMS.forEach((d) => state.filters[d].clear()); render(); });
+  $('filters').addEventListener('change', (e) => {
+    const cb = e.target.closest('input[type="checkbox"][data-dim]');
+    if (!cb) return;
+    const set = state.filters[cb.dataset.dim];
+    if (cb.dataset.all) set.clear();
+    else if (cb.checked) set.add(cb.dataset.key);
+    else set.delete(cb.dataset.key);
+    state.ddOpen = cb.dataset.dim;
+    render();
+  });
+  document.addEventListener('click', (e) => {
+    if (state.ddOpen && !e.target.closest('.dd')) { state.ddOpen = null; renderFilters(); }
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && state.ddOpen) { state.ddOpen = null; renderFilters(); }
+  });
+  $('resetFilters').addEventListener('click', () => { applyDefaultFilters(); render(); });
   $('viewToggle').addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;
@@ -937,6 +987,17 @@
   });
 
   // ───────────────────────── 파일 로딩 ─────────────────────────
+  function applyDefaultFilters() {
+    FILTER_DIMS.forEach((d) => {
+      state.filters[d].clear();
+      const opts = state.model ? state.model.options[d] || [] : [];
+      (DEFAULT_FILTERS[d] || []).forEach((v) => {
+        const hit = opts.find((k) => norm(k) === norm(v)); // 실제 값 표기(month/Month)에 맞춤
+        if (hit !== undefined) state.filters[d].add(hit);
+      });
+    });
+    state.ddOpen = null;
+  }
   function loadWorkbook(buf, name) {
     const wb = XLSX.read(buf, { type: 'array', cellFormula: true, cellNF: false });
     astCache.clear();
@@ -944,8 +1005,8 @@
     state.fileName = name;
     const firstAvail = CHANNELS.find((c) => state.model.channels[c.id]);
     if (!state.model.channels[state.channel] && firstAvail) state.channel = firstAvail.id;
-    FILTER_DIMS.forEach((d) => state.filters[d].clear());
-    $('sourceName').textContent = name + ' (시트 ' + wb.SheetNames.length + '개: ' + wb.SheetNames.join(', ') + ')';
+    applyDefaultFilters();
+    $('fileBtn').title = '현재 파일: ' + name + ' (시트: ' + wb.SheetNames.join(', ') + ') — 다른 엑셀 파일 열기';
     $('dropzone').hidden = true;
     render();
     window.__dashboard = { state, computeView, Evaluator, buildModel };
@@ -953,7 +1014,6 @@
   function showDrop(msg) {
     $('dropzone').hidden = false;
     $('dzErr').textContent = msg || '';
-    $('sourceName').textContent = '파일 없음';
   }
   function readFile(file) {
     const fr = new FileReader();

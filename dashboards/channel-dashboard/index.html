@@ -10,28 +10,19 @@
 </head>
 <body>
 <div class="page">
-  <header class="top">
-    <div class="title">
-      <h1>채널 데이터 대시보드</h1>
-      <p class="source">데이터 소스: <b id="sourceName">불러오는 중…</b></p>
+  <!-- 1. Channel · 2. Filters -->
+  <section class="panel controls">
+    <div class="crow">
+      <span class="clabel">Channel</span>
+      <nav id="channelTabs" class="tabs" role="tablist" aria-label="Channel"></nav>
+      <label class="btn ghost small push" for="fileInput" id="fileBtn" title="다른 엑셀 파일 열기">파일 열기</label>
+      <input type="file" id="fileInput" accept=".xlsx,.xlsm,.xls" hidden>
     </div>
-    <label class="btn ghost" for="fileInput">다른 엑셀 파일 열기</label>
-    <input type="file" id="fileInput" accept=".xlsx,.xlsm,.xls" hidden>
-  </header>
-
-  <!-- 1. Channel -->
-  <section class="panel">
-    <div class="panel-label">Channel</div>
-    <nav id="channelTabs" class="tabs" role="tablist" aria-label="Channel"></nav>
-  </section>
-
-  <!-- 2. Filters -->
-  <section class="panel">
-    <div class="panel-head">
-      <div class="panel-label">필터</div>
-      <button type="button" id="resetFilters" class="btn link">필터 초기화</button>
+    <div class="crow">
+      <span class="clabel">필터</span>
+      <div id="filters" class="filters"></div>
+      <button type="button" id="resetFilters" class="btn link push">초기화</button>
     </div>
-    <div id="filters" class="filters"></div>
   </section>
 
   <div id="context" class="context" aria-live="polite"></div>
