@@ -800,7 +800,8 @@
     const el = $('charts');
     const ch = CHANNELS.find((c) => c.id === state.channel);
     $('chartTitle').innerHTML = '그래프 <span class="badge">' + esc(state.channel) + '</span>';
-    if (!ch.chart) { el.innerHTML = '<div class="empty">RAW Data는 테이블 조회용 채널입니다. 그래프는 Seller · Vis · Output · ETC · Rate 채널에서 확인하세요.</div>'; return; }
+    $('chartSection').hidden = !ch.chart;
+    if (!ch.chart) { el.innerHTML = ''; return; }
     if (!view.data || view.data.kind !== 'pivot') {
       el.innerHTML = '<div class="empty">' + (view.empty ? esc(view.empty) : '이 시트에서 그래프로 그릴 지표 구조를 찾지 못했습니다.') + '</div>';
       return;
