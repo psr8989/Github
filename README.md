@@ -11,6 +11,22 @@ GitHub Pages를 통해 배포된 인터랙티브 대시보드 목록입니다.
 
 ## 🗂️ 대시보드 목록
 
+### 🧭 채널 데이터 대시보드
+
+> 엑셀(`Raw_data.xlsx` 형식)을 브라우저에서 직접 읽어 Channel → 필터 → 데이터 테이블 → 막대그래프 순으로 탐색하는 다크 톤 대시보드
+
+**👉 [https://psr8989.github.io/Github/dashboards/channel-dashboard/](https://psr8989.github.io/Github/dashboards/channel-dashboard/)**
+
+| 항목 | 내용 |
+|------|------|
+| **데이터** | 페이지에서 엑셀 파일을 선택해 불러옴 (서버로 전송되지 않음, 저장소에 데이터 파일 없음) |
+| **Channel** | Seller · Vis · Output · ETC · Rate · RAW Data |
+| **필터** | Period_Index(단일 선택, 기본 Month) · Period(다중 선택 드롭다운) · Cate0(다중 선택) |
+| **계산** | Cate0 선택 시 시트 수식(SUMIFS·비율)을 RAW의 해당 행만으로 재계산 |
+| **디자인 가이드** | [dashboards/channel-dashboard/README.md](dashboards/channel-dashboard/README.md) |
+
+---
+
 ### 📈 2026 연말 주가 시나리오
 
 **v2: 실적·거시경제·로봇 이벤트 시나리오** — 메인 화면은 현재 가격 기준 상대 영업이익 가치 모형입니다. 한국/미국 연말 금리, 환율, 종목별 Q4/Q2 이익 변화, 배수 변화, 관세·경기 등 기타 이익 충격, 현대차 로봇 이벤트 가정을 변경하면 차트·기여도·표·CSV가 갱신됩니다. 공개자료와 미래 가정, 고정 민감도 계수를 화면에 구분했습니다. 기본값은 컨센서스가 아닌 예시이며 새 모형의 예측 정확도는 미검증입니다.
@@ -121,6 +137,9 @@ GitHub Pages를 통해 배포된 인터랙티브 대시보드 목록입니다.
 Github/
 ├── index.html                  ← 랜딩 페이지 (대시보드 포털)
 ├── dashboards/
+│   ├── channel-dashboard/
+│   │   ├── index.html          ← 채널 데이터 대시보드 (style.css · app.js)
+│   │   └── README.md           ← 디자인 가이드
 │   ├── calendar-task/
 │   │   └── index.html          ← 달력 할 일 앱 (PWA, manifest.json·sw.js·icon.svg 포함)
 │   ├── futuristic-wallpaper/
