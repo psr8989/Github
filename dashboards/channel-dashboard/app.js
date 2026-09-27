@@ -1059,6 +1059,19 @@
     showDrop('SheetJS 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하세요.');
     return;
   }
+  // 1순위: data.js에 내장된 데이터 (엑셀 파일 없이 동작), 2순위: 같은 폴더의 엑셀 파일
+  const emb = window.EMBEDDED_WORKBOOK;
+  if (emb && emb.base64) {
+    try {
+      const bin = atob(emb.base64);
+      const buf = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+      loadWorkbook(buf, emb.name || DEFAULT_FILE);
+      return;
+    } catch (err) {
+      console.warn('내장 데이터 로드 실패, 엑셀 파일로 대체합니다.', err);
+    }
+  }
   fetch(DEFAULT_FILE, { cache: 'no-cache' })
     .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
     .then((buf) => loadWorkbook(new Uint8Array(buf), DEFAULT_FILE))
